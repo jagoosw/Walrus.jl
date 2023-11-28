@@ -58,7 +58,7 @@ pages = [
 format = Documenter.HTML(
     collapselevel = 1,
     prettyurls = get(ENV, "CI", nothing) == "true",
-    canonical = "https://jagosw.com/Walrus.jl/stable/",
+    canonical = "http://walrus.jagosw.com/stable/",
     mathengine = MathJax3(),
     assets = String["assets/citations.css"]
 )
