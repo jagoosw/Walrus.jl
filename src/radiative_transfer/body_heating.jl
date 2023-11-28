@@ -51,7 +51,7 @@ Keyword Arguments
 Example
 =======
 
-```jldoctest
+```jldoctest; filter = r".*@ Walrus.RadiativeTransfer.*"
 julia> using Walrus: BodyHeating
 
 julia> using Oceananigans
