@@ -75,7 +75,7 @@ adapt_structure(to, ws::WallStress) = ws
 
 @inline stress_velocity(uₜ, params) = log(params.z₁ * uₜ / (params.ν + eps(0.0))) / (params.κ + eps(0.0)) + params.B - params.U₁ / (uₜ + eps(0.0))
 
-@inline function (wall_stress::WallStress)(i, j, grid, clock, model_fields, direction)
+@inline function (wall_stress::WallStress)(i, j, grid, clock, model_fields, ::Val{direction}) where direction
     ν = wall_stress.kinematic_viscosity
     κ = wall_stress.von_Karman_constant
     B = wall_stress.B
@@ -146,9 +146,9 @@ function WallStressBoundaryConditions(; von_Karman_constant = 0.4,
                                       kinematic_viscosity,
                                       B)
 
-    u = FluxBoundaryCondition(wall_stress_instance, discrete_form = true, parameters = :x)
+    u = FluxBoundaryCondition(wall_stress_instance, discrete_form = true, parameters = Val(:x))
 
-    v = FluxBoundaryCondition(wall_stress_instance, discrete_form = true, parameters = :y)
+    v = FluxBoundaryCondition(wall_stress_instance, discrete_form = true, parameters = Val(:y))
 
     return (; u, v)
 end
