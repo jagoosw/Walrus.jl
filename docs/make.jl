@@ -58,7 +58,7 @@ pages = [
 format = Documenter.HTML(
     collapselevel = 1,
     prettyurls = get(ENV, "CI", nothing) == "true",
-    canonical = "https://jagosw.com/Walrus/stable/",
+    canonical = "https://jagosw.com/Walrus.jl/stable/",
     mathengine = MathJax3(),
     assets = String["assets/citations.css"]
 )
@@ -95,7 +95,7 @@ for file in files
 end
 
 deploydocs(
-    repo = "github.com/jagoosw/GiantKelpDynamics",
+    repo = "github.com/jagoosw/Walrus.jl",
     versions = ["stable" => "v^", "dev" => "dev", "v#.#.#"],
     forcepush = true,
     push_preview = true,
