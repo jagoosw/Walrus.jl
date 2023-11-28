@@ -7,4 +7,7 @@ Currently, it includes:
 - `TidalForcing`: simple body forcing to replicate tides
 - `RadiativeHeating`: a simple radiative transfer model that imparts a body heating
 
+To-do:
+- Add automated testing
+
 If you have any questions or suggestions please get in touch through an [issue](https://github.com/jagoosw/Walrus.jl/issues).

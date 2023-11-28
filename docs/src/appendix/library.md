@@ -7,3 +7,9 @@ Documenting the user interface.
 Modules = [Walrus.WallStressModel]
 private = true
 ```
+
+## Radiative transfer models
+```@autodocs
+Modules = [Walrus.RadiativeTransfer]
+private = true
+```
