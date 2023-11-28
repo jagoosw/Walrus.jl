@@ -63,7 +63,7 @@ julia> grid = RectilinearGrid(size = (128, 128, 128), extent = (1000, 1000, 1000
 └── Bounded  z ∈ [-1000.0, 0.0] regularly spaced with Δz=7.8125
 julia> body_heating = BodyHeating(; surface_flux = (x, y, t) -> 100, grid)
 ┌ Warning: This radiative heating model is untested
-└ @ Walrus.RadiativeTransfer ~/Documents/Projects/Walrus.jl/src/radiative_transfer/body_heating.jl:87
+└ @ Walrus.RadiativeTransfer ~/Documents/Projects/Walrus.jl/src/radiative_transfer/body_heating.jl:88
 Single band light attenuation and body heating model with: 
 - Attenuation coefficient: 1.8 (1 / m)
 - Heat capacity: 3991.0 (J / K / kg)

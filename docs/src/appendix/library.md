@@ -13,3 +13,9 @@ private = true
 Modules = [Walrus.RadiativeTransfer]
 private = true
 ```
+
+## Tidal forcing models
+```@autodocs
+Modules = [Walrus.TidalForcings]
+private = true
+```

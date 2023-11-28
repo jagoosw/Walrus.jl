@@ -11,3 +11,5 @@ To-do:
 - Add automated testing
 
 If you have any questions or suggestions please get in touch through an [issue](https://github.com/jagoosw/Walrus.jl/issues).
+
+If you use this package in your work please contact me so that I can expedite the process of making it citable.
