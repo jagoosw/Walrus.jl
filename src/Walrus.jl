@@ -1,7 +1,10 @@
 module Walrus
 
-include("tidal_forcing.jl")
+export WallStress, WallStressBoundaryConditions
+
 include("wall_model.jl")
-include("radiative_transfer.jl")
+include("tidal_forcing.jl")
+
+using .WallStressModel
 
 end # module Walrus

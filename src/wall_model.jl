@@ -15,6 +15,8 @@ using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.Fields: Center, Face
 using Oceananigans.Grids: znode
 
+import Base: summary, show
+
 """
     WallStress(; von_Karman_constant = 0.4,
                  kinematic_viscosity = 1e-6,
@@ -36,18 +38,32 @@ Example
 =======
 
 ```jldoctest
-julia> using Walrus: WallStressModel
+julia> using Walrus: WallStress
 
 julia> using Oceananigans
 
 julia> wall_stress = WallStress()
-
+(::WallStress{Float64}) (generic function with 1 method)
 julia> boundary_conditions = (u = FieldBoundaryConditions(bottom = FluxBoundaryCondition(wall_stress, discrete_form = true, parameters = :x)),
                               v = FieldBoundaryConditions(bottom = FluxBoundaryCondition(wall_stress, discrete_form = true, parameters = :y)))
+(u = Oceananigans.FieldBoundaryConditions, with boundary conditions
+├── west: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── bottom: FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64}) with parameters Symbol
+├── top: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+└── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing), v = Oceananigans.FieldBoundaryConditions, with boundary conditions
+├── west: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── bottom: FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64}) with parameters Symbol
+├── top: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+└── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing))
 
 ```
 """
-
 @kwdef struct WallStress{FT} <: Function
     von_Karman_constant :: FT = 0.4
     kinematic_viscosity :: FT = 1e-6
@@ -94,15 +110,29 @@ Example
 =======
 
 ```jldoctest
-julia> using Walrus: WallStressModel
+julia> using Walrus: WallStressBoundaryConditions
 
 julia> using Oceananigans
 
 julia> stress_boundary_conditions = WallStressBoundaryConditions()
-
+(u = FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64}) with parameters Symbol, v = FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64}) with parameters Symbol)
 julia> boundary_conditions = (u = FieldBoundaryConditions(bottom = stress_boundary_conditions.u),
                               v = FieldBoundaryConditions(bottom = stress_boundary_conditions.v))
-
+(u = Oceananigans.FieldBoundaryConditions, with boundary conditions
+├── west: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── bottom: FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64}) with parameters Symbol
+├── top: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+└── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing), v = Oceananigans.FieldBoundaryConditions, with boundary conditions
+├── west: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── bottom: FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64}) with parameters Symbol
+├── top: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+└── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing))
 ```
 """
 function WallStressBoundaryConditions(; von_Karman_constant = 0.4,
@@ -119,5 +149,8 @@ function WallStressBoundaryConditions(; von_Karman_constant = 0.4,
 
     return (; u, v)
 end
+
+summary(::WallStress) = string("Wall stress model")
+show(io::IO, wall_stress::WallStress) = println(io, "Wall stress model with ν = $(wall_stress.kinematic_viscosity), κ = $(wall_stress.von_Karman_constant), and B = $(wall_stress.B)")
 
 end # module

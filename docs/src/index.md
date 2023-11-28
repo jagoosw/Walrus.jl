@@ -1,6 +1,6 @@
 # Walrus
 
-``Walrus.jl`` is a Julia package providing various closures models (closure -> seal -> seal 🦭 -> walrus) for ocean flavoured fluid dynamics with [Oceananigans.jl](https://github.com/CliMA/Oceananigans.jl/).
+`Walrus.jl` is a Julia package providing various closures models (closure -> seal -> seal 🦭 -> walrus) for ocean flavoured fluid dynamics with [Oceananigans.jl](https://github.com/CliMA/Oceananigans.jl/).
 
 Currently, it includes:
 - `WallStress`: a wall stress model for LES
