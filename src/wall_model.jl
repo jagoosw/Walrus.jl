@@ -70,6 +70,8 @@ julia> boundary_conditions = (u = FieldBoundaryConditions(bottom = FluxBoundaryC
                       B :: FT = 5.2
 end
 
+adapt(to, ws::WallStress) = ws
+
 @inline stress_velocity(uₜ, params) = log(params.z₁ * uₜ / (params.ν + eps(0.0))) / (params.κ + eps(0.0)) + params.B - params.U₁ / (uₜ + eps(0.0))
 
 @inline function (wall_stress::WallStress)(i, j, grid, clock, model_fields, direction)

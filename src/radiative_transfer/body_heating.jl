@@ -26,6 +26,13 @@ struct BodyHeating{FT, S, F} <: AbstractBiogeochemistry
                                                           field)
 end
 
+adapt_structure(to, bh::BodyHeating) = BodyHeating(bh.water_attenuation_coefficient,
+                                                   bh.water_heat_capacity,
+                                                   bh.water_density,
+                                                   
+                                                   adapt(to, bh.surface_flux),
+                                                   adapt(to, bh.field))
+
 """
     BodyHeating(; surface_flux,
                   grid = nothing,
