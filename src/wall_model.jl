@@ -15,6 +15,7 @@ using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.Fields: Center, Face
 using Oceananigans.Grids: znode
 
+import Adapt: adapt_structure
 import Base: summary, show
 
 """
@@ -70,7 +71,6 @@ julia> boundary_conditions = (u = FieldBoundaryConditions(bottom = FluxBoundaryC
                       B :: FT = 5.2
 end
 
-adapt(to, ws::WallStress) = ws
 adapt_structure(to, ws::WallStress) = ws
 
 @inline stress_velocity(uₜ, params) = log(params.z₁ * uₜ / (params.ν + eps(0.0))) / (params.κ + eps(0.0)) + params.B - params.U₁ / (uₜ + eps(0.0))

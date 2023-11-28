@@ -11,6 +11,8 @@ using Oceananigans.Coriolis: fᶠᶠᵃ, AbstractRotation
 using Oceananigans.Forcings: Forcing
 using Oceananigans.Units: hours
 
+import Adapt: adapt_structure
+
 """
     Tide(; x_amplitude, 
            y_amplitude, 
