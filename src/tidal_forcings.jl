@@ -60,7 +60,7 @@ julia> forcing = (u = Forcing(tide, parameters = Val(:x), discrete_form = true),
      nodal_time :: FT = 0.
           x_lag :: FT = 0.
           y_lag :: FT = 0.
- coriolis_model :: C  = nothing
+       coriolis :: C  = nothing
 end
 
 adapt_structure(to, t::Tide) = Tide(t.x_amplitude,
