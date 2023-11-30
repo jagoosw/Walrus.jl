@@ -133,13 +133,15 @@ show(io::IO, body_heating::BodyHeating) = println(io, string(summary(body_heatin
    end
 end
 
-function update_biogeochemical_state!(model, body_heating::BodyHeating)
+function update_biogeochemical_state!(body_heating::BodyHeating, model)
    arch = architecture(model.grid)
 
    launch!(arch, model.grid, :xy, update_body_heat!, body_heating, model.grid, model.clock.time)
 
    fill_halo_regions!(body_heating.field, model.clock, fields(model))
 end
+
+update_biogeochemical_state!(model, body_heating::BodyHeating) = update_biogeochemical_state!(body_heating, model)
 
 @kernel function apply_body_heating!(body_heating, grid, ∂ₜT)
    i, j, k = @index(Global, NTuple)
@@ -153,10 +155,12 @@ end
    @inbounds ∂ₜT[i, j, k] += α * heating[i, j, k] / (cᵖ * ρₒ)
 end
 
-function update_tendencies!(bgc, body_heating::BodyHeating, model)
+function update_tendencies!(body_heating::BodyHeating, model)
    arch = architecture(model.grid)
 
    ∂ₜT = model.timestepper.Gⁿ.T
 
    launch!(arch, model.grid, :xyz, apply_body_heating!, body_heating, model.grid, ∂ₜT)
 end
+
+update_tendencies!(model, body_heating::BodyHeating) = update_tendencies!(body_heating, model)
