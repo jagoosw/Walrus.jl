@@ -45,8 +45,8 @@ julia> using Oceananigans
 
 julia> wall_stress = WallStress()
 (::WallStress{Float64}) (generic function with 1 method)
-julia> boundary_conditions = (u = FieldBoundaryConditions(bottom = FluxBoundaryCondition(wall_stress, discrete_form = true, parameters = :x)),
-                              v = FieldBoundaryConditions(bottom = FluxBoundaryCondition(wall_stress, discrete_form = true, parameters = :y)))
+julia> boundary_conditions = (u = FieldBoundaryConditions(bottom = FluxBoundaryCondition(wall_stress, discrete_form = true, parameters = Val(:x))),
+                              v = FieldBoundaryConditions(bottom = FluxBoundaryCondition(wall_stress, discrete_form = true, parameters = Val(:y))))
 (u = Oceananigans.FieldBoundaryConditions, with boundary conditions
 ├── west: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
