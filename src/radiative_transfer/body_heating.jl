@@ -138,7 +138,7 @@ function update_biogeochemical_state!(body_heating::BodyHeating, model)
 
    launch!(arch, model.grid, :xy, update_body_heat!, body_heating, model.grid, model.clock.time)
 
-   fill_halo_regions!(body_heating.field, model.clock, fields(model))
+   fill_halo_regions!(body_heating.field, model.clock, body_heating.field)
 end
 
 update_biogeochemical_state!(model, body_heating::BodyHeating) = update_biogeochemical_state!(body_heating, model)
