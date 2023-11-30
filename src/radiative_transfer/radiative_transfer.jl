@@ -9,6 +9,7 @@ export BodyHeating
 
 using KernelAbstractions
 
+using Adapt: adapt
 using Oceananigans.Architectures: architecture
 using Oceananigans.BoundaryConditions: regularize_field_boundary_conditions, fill_halo_regions!, ValueBoundaryCondition, FieldBoundaryConditions
 using Oceananigans.Fields: CenterField

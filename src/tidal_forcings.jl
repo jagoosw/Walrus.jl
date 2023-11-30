@@ -7,6 +7,7 @@ module TidalForcings
 
 export Tide, TidalForcing
 
+using Adapt: adapt
 using Oceananigans.Coriolis: fᶠᶠᵃ, AbstractRotation
 using Oceananigans.Forcings: Forcing
 using Oceananigans.Units: hours
