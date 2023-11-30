@@ -67,7 +67,7 @@ julia> boundary_conditions = (u = FieldBoundaryConditions(bottom = FluxBoundaryC
 """
 @kwdef struct WallStress{FT} <: Function
     von_Karman_constant :: FT = 0.4
-    kinematic_viscosity :: FT = 1e-6
+    kinematic_viscosity :: FT = 1.15e-6
                       B :: FT = 5.2
 end
 
@@ -81,8 +81,8 @@ adapt_structure(to, ws::WallStress) = ws
     B = wall_stress.B
 
     @inbounds begin
-        u = abs(model_fields.u[i, j, 1])
-        v = abs(model_fields.v[i, j, 1])
+        u = model_fields.u[i, j, 1]
+        v = model_fields.v[i, j, 1]
 
         z₁ = znode(i, j, 1, grid, Center(), Center(), Center()) - znode(i, j, 1, grid, Center(), Center(), Face())
     end
