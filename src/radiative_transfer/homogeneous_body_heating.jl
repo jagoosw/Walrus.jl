@@ -84,11 +84,16 @@ end
     cₚ = heating.water_heat_capacity
     α = heating.water_attenuation_coefficient
 
-    x, y, z = node(i, j, k, grid, Center(), Center(), Center())
+    x, y, _ = node(i, j, k, grid, Center(), Center(), Center())
+
+    zᶠ = znode(i, j, k, grid, Center(), Center(), Face())
+
+    zᶠ⁺ = znode(i, j, k + 1, grid, Center(), Center(), Face())
+
     t = clock.time
     A = Azᶠᶠᶜ(i, j, k, grid)
 
-    return heating.surface_flux(x, y, t) * exp(- α * abs(z)) * A / (ρ * cₚ)
+    return heating.surface_flux(x, y, t) * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) * A / (ρ * cₚ)
 end
 
 summary(::HomogeneousBodyHeating) = string("Single band light attenuation and body heating model")

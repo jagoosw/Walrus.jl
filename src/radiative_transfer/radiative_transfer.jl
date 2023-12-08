@@ -14,7 +14,7 @@ using Oceananigans.Architectures: architecture
 using Oceananigans.BoundaryConditions: regularize_field_boundary_conditions, fill_halo_regions!, ValueBoundaryCondition, FieldBoundaryConditions
 using Oceananigans.Fields: CenterField
 using Oceananigans.Forcings: Forcing
-using Oceananigans.Grids: node, Center
+using Oceananigans.Grids: node, znode, Center, Face
 using Oceananigans.Utils: launch!
 using Oceananigans.Operators: Azᶠᶠᶜ
 
