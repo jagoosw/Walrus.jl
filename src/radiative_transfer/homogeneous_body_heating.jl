@@ -15,11 +15,12 @@ struct HomogeneousBodyHeating{FT, S} <: Function
                   surface_flux :: S
 end
 
-adapt_structure(to, bh::HomogeneousBodyHeating) = BodyHeating(bh.water_attenuation_coefficient,
-                                                              bh.water_heat_capacity,
-                                                              bh.water_density,
-                                                              
-                                                              adapt(to, bh.surface_flux))
+adapt_structure(to, bh::HomogeneousBodyHeating) = 
+    HomogeneousBodyHeating(bh.water_attenuation_coefficient,
+                           bh.water_heat_capacity,
+                           bh.water_density,
+                           
+                           adapt(to, bh.surface_flux))
 
 """
     HomogeneousBodyHeating(; surface_flux,
