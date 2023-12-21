@@ -2,7 +2,7 @@ module Walrus
 
 export WallStress, WallStressBoundaryConditions
 
-export BodyHeating
+export HomogeneousBodyHeating
 
 export Tide, TidalForcing
 
