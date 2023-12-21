@@ -1,5 +1,5 @@
 """
-    BodyHeating
+    HomogeneousBodyHeating
 
 A model for single band light attenuation which heats the water in the form:
 ``I(x, y, z) = I_0(x, y) * \\exp\\left(-\\alpha z\\right)``
@@ -43,7 +43,7 @@ Example
 =======
 
 ```jldoctest; filter = r".*@ Walrus.RadiativeTransfer.*"
-julia> using Walrus: BodyHeating
+julia> using Walrus: HomogeneousBodyHeating
 
 julia> using Oceananigans
 
@@ -54,8 +54,8 @@ julia> grid = RectilinearGrid(size = (128, 128, 128), extent = (1000, 1000, 1000
 └── Bounded  z ∈ [-1000.0, 0.0] regularly spaced with Δz=7.8125
 julia> body_heating = HomogeneousBodyHeating(; surface_flux = (x, y, t) -> 100)
 ┌ Warning: This radiative heating model is untested
-└ @ Walrus.RadiativeTransfer ~/Documents/Projects/Walrus.jl/src/radiative_transfer/homogeneous_body_heating.jl:84
-(::HomogeneousBodyHeating{Float64, var"#5#6"}) (generic function with 1 method)
+└ @ Walrus.RadiativeTransfer ~/Documents/Projects/Walrus.jl/src/radiative_transfer/homogeneous_body_heating.jl:75
+(::HomogeneousBodyHeating{Float64, var"#1#2"}) (generic function with 1 method)
 
 julia> model = NonhydrostaticModel(; grid, forcing = (; T = Forcing(body_heating, discrete_form=true)), tracers = :T)
 NonhydrostaticModel{CPU, RectilinearGrid}(time = 0 seconds, iteration = 0)
