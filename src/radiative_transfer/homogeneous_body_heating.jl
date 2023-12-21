@@ -34,7 +34,7 @@ This interacts with Oceananigans as a body forcing.
 Keyword Arguments
 =================
 
-- `surface_flux` (required): a function returning the surface radiaiton flux in the form `surface_flux(x, y, t)`
+- `surface_flux` (required): a function returning the surface radiaiton flux in the form `surface_flux(x, y, t)` or single value
 - `water_attenuation_coefficient`: the radiation attenuation coefficient of the water
 - `water_heat_capacity`: the specific heat capacity of the water
 - `water_density`: density of the water
@@ -73,6 +73,9 @@ function HomogeneousBodyHeating(; surface_flux,
                                   water_density = 1026.0) # kg m⁻³
 
    @warn "This radiative heating model is untested"
+
+    isa(surface_flux, Function) || 
+        surface_flux = ReturnValue(surface_flux)
 
    return HomogeneousBodyHeating(water_attenuation_coefficient,
                                  water_heat_capacity,
