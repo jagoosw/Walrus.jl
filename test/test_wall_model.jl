@@ -18,5 +18,5 @@
         time_step!(model, 1)
     end
 
-    @test all(interior(model.velocities.u, :, :, 2) .< 1) # when velocity, it is reduced
+    @test all(interior(model.velocities.u, :, :, 1) .< 1) # when moving, it is slowed
 end
