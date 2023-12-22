@@ -74,8 +74,7 @@ function HomogeneousBodyHeating(; surface_flux,
 
    @warn "This radiative heating model is untested"
 
-    isa(surface_flux, Function) || 
-        surface_flux = ReturnValue(surface_flux)
+    isa(surface_flux, Function) || (surface_flux = ReturnValue(surface_flux))
 
    return HomogeneousBodyHeating(water_attenuation_coefficient,
                                  water_heat_capacity,

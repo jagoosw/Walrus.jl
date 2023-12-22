@@ -6,11 +6,9 @@ export HomogeneousBodyHeating
 
 export Tide, TidalForcing
 
-using Adapt
+export WindStress, WindStressBoundaryConditions, LogarithmicNeutralWind
 
-include("wall_model.jl")
-include("radiative_transfer/radiative_transfer.jl")
-include("tidal_forcings.jl")
+using Adapt
 
 # This is how we will standarise function vs values, I will have to think of a way to deal with discrete vs continuous at some point
 struct ReturnValue{FT}
@@ -19,8 +17,17 @@ end
 
 @inline (return_value::ReturnValue)(args...) = return_value.value
 
+display_input(return_value::ReturnValue) = return_value.value
+display_input(::Function) = "Function"
+
+include("wall_model.jl")
+include("radiative_transfer/radiative_transfer.jl")
+include("tidal_forcings.jl")
+include("wind_stress.jl")
+
 using .WallStressModel
 using .RadiativeTransfer
 using .TidalForcings
+using .WindStressModel
 
 end # module Walrus
