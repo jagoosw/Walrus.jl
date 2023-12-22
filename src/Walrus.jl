@@ -8,6 +8,8 @@ export Tide, TidalForcing
 
 export WindStress, WindStressBoundaryConditions, LogarithmicNeutralWind
 
+export AirSeaInterface
+
 using Adapt
 
 # This is how we will standarise function vs values, I will have to think of a way to deal with discrete vs continuous at some point
@@ -24,10 +26,12 @@ include("wall_model.jl")
 include("radiative_transfer/radiative_transfer.jl")
 include("tidal_forcings.jl")
 include("wind_stress.jl")
+include("surface_heating.jl")
 
 using .WallStressModel
 using .RadiativeTransfer
 using .TidalForcings
 using .WindStressModel
+using .SurfaceHeatingModel
 
 end # module Walrus

@@ -211,7 +211,7 @@ show(io::IO, wind::WindStress) = println(io, summary(wind), " with:\n",
 Returns a `LogarithmicNeutralWind` parameterisation for the surface drag coefficient
 
 ``C_d`` is parameterised as,
-``C_d = \\frac{\\kappa^2}{\\log{\\frac{10}{z_0}}}``,
+``C_d = \\left(\\frac{\\kappa}{\\log{\\frac{10}{z_0}}}\\right)^2``,
 where ``\\kappa`` is the Monin‐Obukhov stability length and ``z_0`` is the velocity 
 roughness length. This is the roughness length scale which logarithmically brings 
 the relative velocity to zero at the surface, i.e.

@@ -19,3 +19,15 @@ private = true
 Modules = [Walrus.TidalForcings]
 private = true
 ```
+
+## Wind stress model
+```@autodocs
+Modules = [Walrus.WindStressModel]
+private = true
+```
+
+## Surface heat exchange model
+```@autodocs
+Modules = [Walrus.SurfaceHeatingModel]
+private = true
+```

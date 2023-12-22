@@ -6,5 +6,7 @@ Currently, it includes:
 - `WallStress`: a wall stress model for LES
 - `TidalForcing`: simple body forcing to replicate tides
 - `RadiativeHeating`: a simple radiative transfer model that imparts a body heating
+- `WindStress`: a bulk formulation for wind stress
+- `SurfaceHeatExchange`: a bulk formulation for heat exchange at the ocean surface
 
 If you have any questions or suggestions please get in touch through an [issue](https://github.com/jagoosw/Walrus.jl/issues).
