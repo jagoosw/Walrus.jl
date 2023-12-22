@@ -244,9 +244,11 @@ end
     g = dc.gravity_acceleration
 
     params = (; κ, ν, aᶜ, b, g, wind_speed)
-    
+
     ū = find_zero(velocity_roughness_length_roots, 1, p = params)
     z₀ = velocity_roughness_length(ū, params)
+
+    wind_speed == 0 && (z₀ = Inf)
 
     return (params.κ / log(10/z₀) ^ 2)
 end
