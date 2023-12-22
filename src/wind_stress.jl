@@ -1,9 +1,9 @@
 module WindStressModel
 
-using Walrus: ReturnValue, display_input
-
 export WindStress, WindStressBoundaryConditions, LogarithmicNeutralWind
 
+using Roots
+using Walrus: ReturnValue, display_input
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.BuoyancyModels: g_Earth
 
@@ -154,9 +154,9 @@ function WindStressBoundaryConditions(; reference_wind_speed,
     wind_stress = WindStress(; reference_wind_speed, reference_wind_direction,
                                drag_coefficient, air_density, water_density)
 
-    u = FluxBoundaryCondition(wind_stress, parameters = Val(:x))
+    u = FluxBoundaryCondition(wind_stress, parameters = Val(:x), field_dependencies = (:u, :v))
 
-    v = FluxBoundaryCondition(wind_stress, parameters = Val(:y))
+    v = FluxBoundaryCondition(wind_stress, parameters = Val(:y), field_dependencies = (:u, :v))
 
     return (; u, v)
 end
@@ -170,7 +170,7 @@ end
 
     relative_speed = wind_speed - sqrt(u^2 + v^2)
 
-    stress_velocity = ρₐ / ρₒ * wind_speed.drag_coefficient(relative_speed) * relative_speed
+    stress_velocity = ρₐ / ρₒ * wind_stress.drag_coefficient(relative_speed) * relative_speed
 
     uʷ = - wind_speed * sind(wind_direction)
 
@@ -186,7 +186,7 @@ end
 
     relative_speed = wind_speed - sqrt(u^2 + v^2)
 
-    stress_velocity = ρₐ / ρₒ * wind_speed.drag_coefficient(relative_speed) * relative_speed
+    stress_velocity = ρₐ / ρₒ * wind_stress.drag_coefficient(relative_speed) * relative_speed
 
     vʷ = - wind_speed * cosd(wind_direction)
 
@@ -229,20 +229,23 @@ This parameterisaion is described in [smith1988](@citet)
             charnock_coefficient :: FT = 0.014
          air_kinematic_viscosity :: FT = 1.488e-5
         gravity_wave_coefficient :: FT = 0.11
-                         gravity :: FT = g_Earth
+            gravity_acceleration :: FT = g_Earth
 end
 
 @inline velocity_roughness_length_roots(ū, params) = velocity_roughness_length(ū, params) - 10 * exp(- params.wind_speed / (params.κ * ū))
 
-@inline velocity_roughness_length(ū, params) = 0.11 * params.ν / (ū + eps(0.0)) + params.aᶜ * ū^2 / params.gravity
+@inline velocity_roughness_length(ū, params) = 0.11 * params.ν / (ū + eps(0.0)) + params.aᶜ * ū^2 / params.g
 
 @inline function (dc::LogarithmicNeutralWind)(wind_speed)
     κ = dc.monin_obukhov_stability_length
     ν = dc.air_kinematic_viscosity
     aᶜ = dc.charnock_coefficient
     b = dc.gravity_wave_coefficient
+    g = dc.gravity_acceleration
 
-    ū = find_zero(velocity_roughness_length_roots, 1, p = (; κ, ν, aᶜ, b, wind_speed))
+    params = (; κ, ν, aᶜ, b, g, wind_speed)
+    
+    ū = find_zero(velocity_roughness_length_roots, 1, p = params)
     z₀ = velocity_roughness_length(ū, params)
 
     return (params.κ / log(10/z₀) ^ 2)
