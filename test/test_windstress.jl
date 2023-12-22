@@ -4,7 +4,7 @@
     wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 1., reference_wind_direction = 90.)
 
     model = NonhydrostaticModel(; grid, boundary_conditions = (u = FieldBoundaryConditions(top = wind_stress_boundary_conditions.u),
-                                                            v = FieldBoundaryConditions(top = wind_stress_boundary_conditions.v)))
+                                                               v = FieldBoundaryConditions(top = wind_stress_boundary_conditions.v)))
 
     for n=1:100000
         time_step!(model, 1)
