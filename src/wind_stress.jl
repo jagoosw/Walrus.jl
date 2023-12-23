@@ -213,13 +213,19 @@ show(io::IO, wind::WindStress) = println(io, summary(wind), " with:\n",
 Returns a `LogarithmicNeutralWind` parameterisation for the surface drag coefficient
 
 ``C_d`` is parameterised as,
-``C_d = \\left(\\frac{\\kappa}{\\log{\\frac{10}{z_0}}}\\right)^2``,
+```math
+C_d = \\left(\\frac{\\kappa}{\\log{\\frac{10}{z_0}}}\\right)^2,
+```
 where ``\\kappa`` is the Monin‐Obukhov stability length and ``z_0`` is the velocity 
 roughness length. This is the roughness length scale which logarithmically brings 
 the relative velocity to zero at the surface, i.e.
-``U=\\frac{u\\star}{\\kappa}\\log\\frac{z/z_0}``,
+```math
+U=\\frac{u\\star}{\\kappa}\\log\\frac{z}{z_0},
+````
 where ``u\\star`` is the friction velocity. Additionally ``z_0`` is given as,
-``z_0=b\\frac{\\nu}{u\\star} + \\frac{a_c}{g}u\\star^2``,
+```math
+z_0=b\\frac{\\nu}{u\\star} + \\frac{a_c}{g}u\\star^2,
+```
 where ``\\nu`` is the kinematic viscosity of air and g is the acceleration of gravity.
 
 This model itterativly solves these equations to find ``z_0``.
