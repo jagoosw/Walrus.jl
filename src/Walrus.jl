@@ -8,9 +8,7 @@ export Tide, TidalForcing
 
 export WindStress, WindStressBoundaryConditions, LogarithmicNeutralWind
 
-export AirSeaInterface
-
-using Adapt
+export SurfaceHeatExchange, SurfaceHeatExchangeBoundaryCondition
 
 # This is how we will standarise function vs values, I will have to think of a way to deal with discrete vs continuous at some point
 struct ReturnValue{FT}

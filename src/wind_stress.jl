@@ -25,7 +25,9 @@ end
                  water_density = 1026.)
 
 Returns a wind stress model where the stress is given by,
-``\\frac{\\tau}{\\rho_o} = \\rho_aC_dSU_{x/y}``,
+```math
+\\frac{\\tau}{\\rho_o} = \\rho_aC_dSU_{x/y},
+```
 where ``\\rho_o`` is the water density, ``\\rho_a`` is the air density,
 ``C_d`` is the drag coefficient, ``U_{x/y}`` are the x and y components of 
 relative wind speed, and ``S=\\sqrt{U_x^2+U_y^2}``.
@@ -232,9 +234,7 @@ This parameterisaion is described in [smith1988](@citet)
             gravity_acceleration :: FT = g_Earth
 end
 
-@inline velocity_roughness_length_roots(ū, params) = velocity_roughness_length(ū, params) - 10 * exp(- params.wind_speed / (params.κ * ū))
-
-@inline velocity_roughness_length(ū, params) = 0.11 * params.ν / (ū + eps(0.0)) + params.aᶜ * ū^2 / params.g
+@inline velocity_roughness_length_roots(z₀, params) = log(params.z/z₀)/(params.κ * params.wind_speed) * (params.κ * params.b + params.aᶜ * (params.κ * params.wind_speed / log(params.z/z₀)^3)) - z₀
 
 @inline function (dc::LogarithmicNeutralWind)(wind_speed)
     κ = dc.monin_obukhov_stability_length
@@ -243,14 +243,17 @@ end
     b = dc.gravity_wave_coefficient
     g = dc.gravity_acceleration
 
-    params = (; κ, ν, aᶜ, b, g, wind_speed)
+    params = (; κ, ν, aᶜ, b, g, wind_speed, z = 10)
 
-    ū = find_zero(velocity_roughness_length_roots, 1, p = params)
-    z₀ = velocity_roughness_length(ū, params)
+    z₀ = 10
+    
+    wind_speed == 0 || (z₀ = find_zero(velocity_roughness_length_roots, 1, p = params))
 
-    wind_speed == 0 && (z₀ = Inf)
+    Cᵈ = (params.κ / log(10 / z₀)) ^ 2
 
-    return (params.κ / log(10/z₀) ^ 2)
+    isfinite(Cᵈ) || (Cᵈ = 0) # this should only occur if wind speed is zero in which case stress is zero anyway
+    
+    return Cᵈ
 end
 
 summary(::LogarithmicNeutralWind) = string("Log neutral wind drag coefficient model")
@@ -258,7 +261,7 @@ show(io::IO, cd::LogarithmicNeutralWind) = println(io, summary(cd), " with:\n",
                                                   " κ: ",  cd.monin_obukhov_stability_length, "\n",
                                                   " ν: ",  cd.air_kinematic_viscosity, " m²/s\n",
                                                   " aᶜ: ", cd.charnock_coefficient, "\n",
-                                                  " g: " , cd.gravity, "m/s²\n",
+                                                  " g: " , cd.gravity_acceleration, "m/s²\n",
                                                   " b: ", cd.gravity_wave_coefficient)
 
 end # module
