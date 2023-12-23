@@ -50,7 +50,7 @@ julia> using Walrus: HomogeneousBodyHeating
 julia> using Oceananigans
 
 julia> grid = RectilinearGrid(size = (128, 128, 128), extent = (1000, 1000, 1000))
-128×128×128 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3×3×3 halo
+128×128×128 RectilinearGrid{Float64, Oceananigans.Grids.Periodic, Oceananigans.Grids.Periodic, Oceananigans.Grids.Bounded} on Oceananigans.Architectures.CPU with 3×3×3 halo
 ├── Periodic x ∈ [0.0, 1000.0)  regularly spaced with Δx=7.8125
 ├── Periodic y ∈ [0.0, 1000.0)  regularly spaced with Δy=7.8125
 └── Bounded  z ∈ [-1000.0, 0.0] regularly spaced with Δz=7.8125
@@ -59,7 +59,7 @@ julia> body_heating = HomogeneousBodyHeating(; surface_flux = (x, y, t) -> 100)
 
 julia> model = NonhydrostaticModel(; grid, forcing = (; T = Forcing(body_heating, discrete_form=true)), tracers = :T)
 NonhydrostaticModel{CPU, RectilinearGrid}(time = 0 seconds, iteration = 0)
-├── grid: 128×128×128 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3×3×3 halo
+├── grid: 128×128×128 RectilinearGrid{Float64, Oceananigans.Grids.Periodic, Oceananigans.Grids.Periodic, Oceananigans.Grids.Bounded} on Oceananigans.Architectures.CPU with 3×3×3 halo
 ├── timestepper: QuasiAdamsBashforth2TimeStepper
 ├── tracers: T
 ├── closure: Nothing
