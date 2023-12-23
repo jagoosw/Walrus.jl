@@ -40,7 +40,7 @@
     # 1 W heating -> 1 K m / s for 1s with Δz = 1m -> -272.15 K
     time_step!(model, 1)
 
-    @test model.teacers.T[1, 1, 10] ≈ -272.15
+    @test model.tracers.T[1, 1, 10] ≈ -272.15
 
     #####
     ##### Test sensible flux
@@ -64,7 +64,7 @@
     # 1 W heating -> 1 K m / s for 1s with Δz = 1m -> -272.15 K
     time_step!(model, 1)
 
-    @test model.teacers.T[1, 1, 10] ≈ -272.15
+    @test model.tracers.T[1, 1, 10] ≈ -272.15
 
     #####
     ##### Test sensible heating/cooling - it is not straight forward to come up with an anlaytical result for this
