@@ -44,9 +44,9 @@ appendix_pages = [
 
 pages = [
     "Home" => "index.md",
-    "Quick start" => "coming-soon.md",
-    "Examples" => example_pages,
-    "Numerical implementation" => numerical_pages,
+    #"Quick start" => "coming-soon.md",
+    #"Examples" => example_pages,
+    #"Numerical implementation" => numerical_pages,
     "References" => "references.md",
     "Appendix" => appendix_pages
 ]

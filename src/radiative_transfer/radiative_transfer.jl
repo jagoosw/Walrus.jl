@@ -8,6 +8,7 @@ module RadiativeTransfer
 export HomogeneousBodyHeating
 
 using KernelAbstractions
+using Walrus: ReturnValue
 
 using Adapt: adapt
 using Oceananigans.Architectures: architecture

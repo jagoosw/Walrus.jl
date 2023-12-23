@@ -2,7 +2,9 @@
     HomogeneousBodyHeating
 
 A model for single band light attenuation which heats the water in the form:
-``I(x, y, z) = I_0(x, y) * \\exp\\left(-\\alpha z\\right)``
+```math
+I(x, y, z) = I_0(x, y) * \\exp\\left(-\\alpha z\\right),
+```
 where ``I`` is the radiation intensity and ``\\alpha`` is the attenuation coefficient. This heats the water
 like ``\\frac{\\partial T(x, y, z)}{\\partial t} = \\frac{I(x, y, z)A}{c^p\\rho}`` where ``A`` is the area of the cell, ``c^p`` is the specific heat capacity
 and ``\\rho`` is the water density. 
@@ -34,7 +36,7 @@ This interacts with Oceananigans as a body forcing.
 Keyword Arguments
 =================
 
-- `surface_flux` (required): a function returning the surface radiaiton flux in the form `surface_flux(x, y, t)`
+- `surface_flux` (required): a function returning the surface radiaiton flux in the form `surface_flux(x, y, t)` or single value
 - `water_attenuation_coefficient`: the radiation attenuation coefficient of the water
 - `water_heat_capacity`: the specific heat capacity of the water
 - `water_density`: density of the water
@@ -53,8 +55,6 @@ julia> grid = RectilinearGrid(size = (128, 128, 128), extent = (1000, 1000, 1000
 ├── Periodic y ∈ [0.0, 1000.0)  regularly spaced with Δy=7.8125
 └── Bounded  z ∈ [-1000.0, 0.0] regularly spaced with Δz=7.8125
 julia> body_heating = HomogeneousBodyHeating(; surface_flux = (x, y, t) -> 100)
-┌ Warning: This radiative heating model is untested
-└ @ Walrus.RadiativeTransfer ~/Documents/Projects/Walrus.jl/src/radiative_transfer/homogeneous_body_heating.jl:75
 (::HomogeneousBodyHeating{Float64, var"#1#2"}) (generic function with 1 method)
 
 julia> model = NonhydrostaticModel(; grid, forcing = (; T = Forcing(body_heating, discrete_form=true)), tracers = :T)
@@ -72,12 +72,12 @@ function HomogeneousBodyHeating(; surface_flux,
                                   water_heat_capacity = 3991.0, # J K⁻¹ kg⁻¹
                                   water_density = 1026.0) # kg m⁻³
 
-   @warn "This radiative heating model is untested"
+    isa(surface_flux, Function) || (surface_flux = ReturnValue(surface_flux))
 
-   return HomogeneousBodyHeating(water_attenuation_coefficient,
-                                 water_heat_capacity,
-                                 water_density,
-                                 surface_flux)
+    return HomogeneousBodyHeating(water_attenuation_coefficient,
+                                  water_heat_capacity,
+                                  water_density,
+                                  surface_flux)
 end
 
 @inline function (heating::HomogeneousBodyHeating)(i, j, k, grid, clock, model_fields)

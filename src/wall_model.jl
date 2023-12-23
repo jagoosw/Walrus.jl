@@ -91,6 +91,8 @@ adapt_structure(to, ws::WallStress) = ws
 
     uₜ = find_zero(stress_velocity, (0., Inf), Bisection(); p = (; U₁, z₁, κ, ν, B), maxiters = 10^5)
 
+    U₁ == 0 && (uₜ = 0)
+
     return ifelse(direction == :x, -u / (U₁ + eps(0.0)) * uₜ ^ 2, -v / (U₁ + eps(0.0)) * uₜ ^ 2)
 end
 
