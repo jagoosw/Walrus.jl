@@ -221,7 +221,7 @@ roughness length. This is the roughness length scale which logarithmically bring
 the relative velocity to zero at the surface, i.e.
 ```math
 U=\\frac{u\\star}{\\kappa}\\log\\frac{z}{z_0},
-````
+```
 where ``u\\star`` is the friction velocity. Additionally ``z_0`` is given as,
 ```math
 z_0=b\\frac{\\nu}{u\\star} + \\frac{a_c}{g}u\\star^2,
