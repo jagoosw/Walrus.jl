@@ -15,9 +15,6 @@ Currently, it includes:
 
 Details of the parametrisations used for each model and implementation notes can be found in their docstrings and in [the documentation](https://walrus.jagosw.com/stable/appendix/library/).
 
-To-do:
-- Add automated testing
-
 If you have any questions or suggestions please get in touch through an [issue](https://github.com/jagoosw/Walrus.jl/issues).
 
 If you use this package in your work please contact me so that I can expedite the process of making it citable.
