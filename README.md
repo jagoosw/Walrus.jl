@@ -13,7 +13,7 @@ Currently, it includes:
 - `WindStress`: a bulk formulation for wind stress
 - `SurfaceHeatExchange`: a bulk formulation for heat exchange at the ocean surface
 
-Limited documentaiton is available [here](http://walrus.jagosw.com/dev/).
+Details of the parametrisations used for each model and implementation notes can be found in their docstrings and in [the documentation](https://walrus.jagosw.com/stable/appendix/library/).
 
 To-do:
 - Add automated testing
