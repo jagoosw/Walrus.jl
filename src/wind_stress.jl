@@ -253,7 +253,7 @@ end
 
     z₀ = 10
     
-    wind_speed == 0 || (z₀ = find_zero(velocity_roughness_length_roots, 1, p = params))
+    wind_speed == 0 || (z₀ = find_zero(velocity_roughness_length_roots, (0, Inf), Bisection(), p = params))
 
     Cᵈ = (params.κ / log(10 / z₀)) ^ 2
 
