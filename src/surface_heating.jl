@@ -214,7 +214,7 @@ end
 
     z₀ = 2
 
-    wind_speed == 0 || (z₀ = find_zero(velocity_roughness_length_roots, (0, 1.9), Bisection(), p = params))
+    wind_speed == 0 || (z₀ = find_zero(velocity_roughness_length_roots, (0, 1), Bisection(), p = params))
 
     ū = κ * wind_speed / log(2 / z₀)
 
