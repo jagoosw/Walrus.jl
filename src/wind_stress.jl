@@ -179,7 +179,7 @@ end
 
     uʷ = - wind_speed * sind(wind_direction)
 
-    return stress_velocity * (uʷ - u)
+    return - stress_velocity * (uʷ - u)
 end
 
 @inline function (wind_stress::WindStress)(x, y, t, u, v, ::Val{:y})
@@ -198,7 +198,7 @@ end
 
     vʷ = - wind_speed * cosd(wind_direction)
 
-    return stress_velocity * (vʷ - v)
+    return - stress_velocity * (vʷ - v)
 end
 
 summary(::WindStress) = string("Wind stress model")
