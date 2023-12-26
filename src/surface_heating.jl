@@ -260,8 +260,8 @@ end
 
     air_temperature = interface.air_temperature(x, y, t)
 
-    wind_speed = wind_stress.reference_wind_speed(x, y, t)
-    wind_direction = wind_stress.reference_wind_direction(x, y, t)
+    wind_speed = interface.wind_stress.reference_wind_speed(x, y, t)
+    wind_direction = interface.wind_stress.reference_wind_direction(x, y, t)
 
     uʷ = - wind_speed * sind(wind_direction)
     vʷ = - wind_speed * cosd(wind_direction)
