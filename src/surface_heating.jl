@@ -9,7 +9,7 @@ using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Walrus: ReturnValue, display_input
 using Walrus.WindStressModel: WindStress, 
                               LogarithmicNeutralWind, 
-                              velocity_roughness_length_roots
+                              find_velocity_roughness_length
 
 struct SurfaceHeatExchange{WS, AT, LH, VP, FT} <: Function
                    wind_stress :: WS
