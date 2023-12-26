@@ -240,7 +240,8 @@ This parameterisaion is described in [smith1988](@citet)
             gravity_acceleration :: FT = g_Earth
 end
 
-@inline velocity_roughness_length_roots(z₀, params) = log(params.z/z₀)/(params.κ * params.wind_speed) * (params.κ * params.b + params.aᶜ * (params.κ * params.wind_speed / log(params.z/z₀))^3) - z₀
+@inline velocity_roughness_length_roots(z₀, params) = 
+    log(params.z/z₀)/(params.κ * params.wind_speed) * (params.κ * params.b + params.aᶜ * (params.κ * params.wind_speed / log(params.z/z₀))^3) - z₀
 
 @inline function (dc::LogarithmicNeutralWind)(wind_speed)
     κ = dc.monin_obukhov_stability_length
@@ -253,7 +254,9 @@ end
 
     z₀ = 10
     
-    wind_speed == 0 || (z₀ = find_zero(velocity_roughness_length_roots, (0, 5), Bisection(), p = params))
+    upper_bounds_guess = ifelse(wind_speed < 0.05, 0.99 * z, ifelse(wind_speed < 14, 0.5 * z, 0.2 * z))
+
+    wind_speed == 0 || (z₀ = find_zero(velocity_roughness_length_roots, (0.001, upper_bounds_guess), Bisection(), p = params))
 
     Cᵈ = (params.κ / log(10 / z₀)) ^ 2
 
