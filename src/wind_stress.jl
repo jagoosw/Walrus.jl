@@ -179,7 +179,7 @@ end
 
     uʷ = - wind_speed * sind(wind_direction)
 
-    return - stress_velocity * (uʷ - u)
+    return stress_velocity * (uʷ - u)
 end
 
 @inline function (wind_stress::WindStress)(x, y, t, u, v, ::Val{:y})
@@ -198,7 +198,7 @@ end
 
     vʷ = - wind_speed * cosd(wind_direction)
 
-    return - stress_velocity * (vʷ - v)
+    return stress_velocity * (vʷ - v)
 end
 
 summary(::WindStress) = string("Wind stress model")
@@ -250,6 +250,15 @@ end
     log(params.reference_height/z₀)/(params.κ * params.wind_speed) * 
         (params.ν * params.b + params.aᶜ * (params.κ * params.wind_speed / log(params.reference_height/z₀))^3) - z₀
 
+"""
+    find_velocity_roughness_length(wind_speed, reference_height, params)
+
+A function that finds the velocity roughness length for the `LogarithmicNeutralWind` drag
+coefficient model.
+
+This will sometimes fail as the function is not well behaved at either low reference heights
+(it has been tuned for 10m wind), or high (⪆ 20 m/s).
+"""
 @inline function find_velocity_roughness_length(wind_speed, reference_height, params)
     z₀ = reference_height
     
