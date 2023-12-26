@@ -212,9 +212,9 @@ end
 
     params = (; κ, ν, aᶜ, b, g, wind_speed, z = 2)
 
-    z₀ = 2
+    params = (; κ, ν, aᶜ, b, g)
 
-    wind_speed == 0 || (z₀ = find_zero(velocity_roughness_length_roots, (0, 1), Bisection(), p = params))
+    z₀ = find_velocity_roughness_length(wind_speed, 2, params)
 
     ū = κ * wind_speed / log(2 / z₀)
 

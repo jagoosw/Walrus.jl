@@ -241,7 +241,18 @@ This parameterisaion is described in [smith1988](@citet)
 end
 
 @inline velocity_roughness_length_roots(z₀, params) = 
-    log(params.z/z₀)/(params.κ * params.wind_speed) * (params.κ * params.b + params.aᶜ * (params.κ * params.wind_speed / log(params.z/z₀))^3) - z₀
+    log(params.reference_height/z₀)/(params.κ * params.wind_speed) * 
+        (params.ν * params.b + params.aᶜ * (params.κ * params.wind_speed / log(params.reference_height/z₀))^3) - z₀
+
+@inline function find_velocity_roughness_length(wind_speed, reference_height, params)
+    z₀ = reference_height
+    
+    upper_bounds_guess = ifelse(wind_speed < 0.05, 0.95 * reference_height, ifelse(wind_speed < 14, 0.5 * reference_height, 0.2 * reference_height))
+
+    wind_speed < 0.01 || (z₀ = find_zero(velocity_roughness_length_roots, (0.00001, upper_bounds_guess), Bisection(), p = merge(params, (; wind_speed, reference_height))))
+
+    return z₀
+end
 
 @inline function (dc::LogarithmicNeutralWind)(wind_speed)
     κ = dc.monin_obukhov_stability_length
@@ -250,17 +261,11 @@ end
     b = dc.gravity_wave_coefficient
     g = dc.gravity_acceleration
 
-    params = (; κ, ν, aᶜ, b, g, wind_speed, z = 10)
+    params = (; κ, ν, aᶜ, b, g)
 
-    z₀ = 10
-    
-    upper_bounds_guess = ifelse(wind_speed < 0.05, 0.99 * z, ifelse(wind_speed < 14, 0.5 * z, 0.2 * z))
-
-    wind_speed == 0 || (z₀ = find_zero(velocity_roughness_length_roots, (0.001, upper_bounds_guess), Bisection(), p = params))
+    z₀ = find_velocity_roughness_length(wind_speed, 10, params)
 
     Cᵈ = (params.κ / log(10 / z₀)) ^ 2
-
-    isfinite(Cᵈ) || (Cᵈ = 0) # this should only occur if wind speed is zero in which case stress is zero anyway
     
     return Cᵈ
 end
