@@ -260,9 +260,13 @@ end
 
     air_temperature = interface.air_temperature(x, y, t)
 
-    wind_speed = interface.wind_stress.reference_wind_speed(x, y, t)
+    wind_speed = wind_stress.reference_wind_speed(x, y, t)
+    wind_direction = wind_stress.reference_wind_direction(x, y, t)
 
-    relative_speed = wind_speed - sqrt(u^2 + v^2)
+    uʷ = - wind_speed * sind(wind_direction)
+    vʷ = - wind_speed * cosd(wind_direction)
+
+    relative_speed = √((uʷ - u)^2 + (vʷ - v)^2)
 
     cʰ = Cʰ(interface.wind_stress.drag_coefficient, relative_speed)
     
