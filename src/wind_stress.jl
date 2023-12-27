@@ -177,8 +177,6 @@ end
 
     stress_velocity = ρₐ / ρₒ * wind_stress.drag_coefficient(relative_speed) * relative_speed
 
-    uʷ = - wind_speed * sind(wind_direction)
-
     return - stress_velocity * (uʷ - u)
 end
 
@@ -195,8 +193,6 @@ end
     relative_speed = √((uʷ - u)^2 + (vʷ - v)^2)
 
     stress_velocity = ρₐ / ρₒ * wind_stress.drag_coefficient(relative_speed) * relative_speed
-
-    vʷ = - wind_speed * cosd(wind_direction)
 
     return - stress_velocity * (vʷ - v)
 end
@@ -281,6 +277,8 @@ end
     z₀ = find_velocity_roughness_length(wind_speed, 10, params)
 
     Cᵈ = (params.κ / log(10 / z₀)) ^ 2
+
+    isfinite(Cᵈ) || (Cᵈ = 0) # occurs when z₀ -> reference_height
     
     return Cᵈ
 end
