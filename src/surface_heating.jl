@@ -218,7 +218,7 @@ end
 
     ū = κ * wind_speed / log(10 / z₀)
 
-    isfinite(ū) || ū = 0
+    isfinite(ū) || (ū = 0)
 
     Rᵣ = ū * z₀ / params.ν
     zₒₜ = min(1.15e-4, 5.5e-5 * Rᵣ ^ -0.6)
