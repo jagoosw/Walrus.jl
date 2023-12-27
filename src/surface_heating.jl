@@ -24,6 +24,18 @@ struct SurfaceHeatExchange{WS, AT, LH, VP, FT} <: Function
      stephan_boltzman_constant :: FT
 end
 
+adapt_structure(to, sh::SurfaceHeatExchange) = 
+    SurfaceHeatExchange(adapt(to, sh.wind_stress),
+                        adapt(to, sh.air_temperature),
+                        adapt(to, sh.latent_heat_vaporisation),
+                        adapt(to, sh.vapour_pressure),
+                        sh.water_specific_heat_capacity,
+                        sh.water_density,
+                        sh.air_specific_heat_capacity,
+                        sh.air_density,
+                        sh.air_water_mixing_ratio,
+                        sh.stephan_boltzman_constant)
+
 """
     SurfaceHeatExchange(; wind_stress,
                           air_temperature = 18, # °C

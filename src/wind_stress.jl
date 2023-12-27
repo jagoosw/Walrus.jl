@@ -3,10 +3,13 @@ module WindStressModel
 export WindStress, WindStressBoundaryConditions, LogarithmicNeutralWind
 
 using Roots
-using Walrus: ReturnValue, display_input
+
+using Adapt: adapt
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.BuoyancyModels: g_Earth
+using Walrus: ReturnValue, display_input
 
+import Adapt: adapt_structure
 import Base: summary, show
 
 struct WindStress{WS, WD, DC, FT} <: Function
@@ -16,6 +19,12 @@ struct WindStress{WS, WD, DC, FT} <: Function
                air_density :: FT
              water_density :: FT
 end
+
+adapt_structure(to, ws::WindStress) = WindStress(adapt(to, ws.reference_wind_speed),
+                                                 adapt(to, ws.reference_wind_direction),
+                                                 adapt(to, ws.drag_coefficient),
+                                                 ws.air_density,
+                                                 ws.water_density)
 
 """
     WindStress(; reference_wind_speed, 
@@ -241,6 +250,8 @@ This parameterisaion is described in [smith1988](@citet)
         gravity_wave_coefficient :: FT = 0.11
             gravity_acceleration :: FT = g_Earth
 end
+
+adapt_structure(to, dc::LogarithmicNeutralWind) = dc
 
 @inline velocity_roughness_length_roots(z₀, params) = 
     log(params.reference_height/z₀)/(params.κ * params.wind_speed) * 
