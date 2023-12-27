@@ -223,7 +223,7 @@ end
     Rᵣ = ū * z₀ / params.ν
     zₒₜ = min(1.15e-4, 5.5e-5 * Rᵣ ^ -0.6)
 
-    result = params.κ ^ 2 / (log(10/z₀) * log(10/zₒₜ))
+    result = params.κ ^ 2 / (log(10/z₀) * log(10/zₒₜ)) # hmm this might be meant to be 2
 
     isfinite(result) || (result = 0) # this should only occur if wind speed is zero in which case stress is zero anyway
 
@@ -272,16 +272,16 @@ end
 
     cʰ = Cʰ(interface.wind_stress.drag_coefficient, relative_speed)
     
-    radiative_cooling = σ * ((273.15 + T) ^ 4 - (273.15 + air_temperature) ^ 4)
+    radiative_cooling = σ * ((273.15 + T) ^ 4 - (273.15 + air_temperature) ^ 4) # J / m² / s
 
-    sensible_cooling = relative_speed * ρᵃ * cₚᵃ * cʰ * (T - air_temperature)
+    sensible_cooling = relative_speed * ρᵃ * cₚᵃ * cʰ * (T - air_temperature) # (m / s) (kg / m³) (J / kg / K) (1) (k) -> (1 / s) (1 / m²) (J) -> J / m² / s
 
     q = interface.vapour_pressure(T)
     L = interface.latent_heat_vaporisation(T)
 
-    latent_cooling = relative_speed * ρᵃ * L * cʰ * (q - qₐ)
+    latent_cooling = relative_speed * ρᵃ * L * cʰ * (q - qₐ) # (m / s) (kg / m³) (J / kg) (1) (kg / kg) -> (m / s) (m³) (J) -> J / m² / s
 
-    return (radiative_cooling + sensible_cooling + latent_cooling) / (ρʷ * cₚʷ)
+    return (radiative_cooling + sensible_cooling + latent_cooling) / (ρʷ * cₚʷ) # (J / m² / s) / ((kg / m³) (J / kg / K)) -> (J / m² / s) / ( J / m³ / K)) -> K m / s
 end
 
 end # module
