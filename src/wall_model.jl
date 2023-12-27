@@ -52,7 +52,7 @@ julia> using Walrus: WallStress
 julia> using Oceananigans
 
 julia> wall_stress = WallStress()
-(::WallStress{Float64}) (generic function with 1 method)
+(::WallStress{Float64, Nothing}) (generic function with 1 method)
 julia> boundary_conditions = (u = FieldBoundaryConditions(bottom = FluxBoundaryCondition(wall_stress, discrete_form = true, parameters = Val(:x))),
                               v = FieldBoundaryConditions(bottom = FluxBoundaryCondition(wall_stress, discrete_form = true, parameters = Val(:y))))
 (u = Oceananigans.FieldBoundaryConditions, with boundary conditions
@@ -60,14 +60,14 @@ julia> boundary_conditions = (u = FieldBoundaryConditions(bottom = FluxBoundaryC
 ├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── bottom: FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64}) with parameters Val{:x}
+├── bottom: FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64, Nothing}) with parameters Val{:x}
 ├── top: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing), v = Oceananigans.FieldBoundaryConditions, with boundary conditions
 ├── west: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── bottom: FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64}) with parameters Val{:y}
+├── bottom: FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64, Nothing}) with parameters Val{:y}
 ├── top: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing))
 
@@ -159,7 +159,7 @@ julia> using Walrus: WallStressBoundaryConditions
 julia> using Oceananigans
 
 julia> stress_boundary_conditions = WallStressBoundaryConditions()
-(u = FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64}) with parameters Val{:x}, v = FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64}) with parameters Val{:y})
+(u = FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64, Nothing}) with parameters Val{:x}, v = FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64, Nothing}) with parameters Val{:y})
 julia> boundary_conditions = (u = FieldBoundaryConditions(bottom = stress_boundary_conditions.u),
                               v = FieldBoundaryConditions(bottom = stress_boundary_conditions.v))
 (u = Oceananigans.FieldBoundaryConditions, with boundary conditions
@@ -167,14 +167,14 @@ julia> boundary_conditions = (u = FieldBoundaryConditions(bottom = stress_bounda
 ├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── bottom: FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64}) with parameters Val{:x}
+├── bottom: FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64, Nothing}) with parameters Val{:x}
 ├── top: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing), v = Oceananigans.FieldBoundaryConditions, with boundary conditions
 ├── west: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── bottom: FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64}) with parameters Val{:y}
+├── bottom: FluxBoundaryCondition: DiscreteBoundaryFunction (::WallStress{Float64, Nothing}) with parameters Val{:y}
 ├── top: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing))
 ```

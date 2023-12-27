@@ -70,7 +70,7 @@ julia> reference_wind_direction = 0.
 0.0
 
 julia> wind_stress = WindStress(; reference_wind_speed, reference_wind_direction)
-(::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64}, Float64}) (generic function with 2 methods)
+(::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) (generic function with 2 methods)
 
 julia> boundary_conditions = (u = FieldBoundaryConditions(top = FluxBoundaryCondition(wind_stress, parameters = Val(:x))),
                               v = FieldBoundaryConditions(top = FluxBoundaryCondition(wind_stress, parameters = Val(:y))))
@@ -80,14 +80,14 @@ julia> boundary_conditions = (u = FieldBoundaryConditions(top = FluxBoundaryCond
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── bottom: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64}, Float64}) at (Nothing, Nothing, Nothing)
+├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing)
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing), v = Oceananigans.FieldBoundaryConditions, with boundary conditions
 ├── west: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── bottom: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64}, Float64}) at (Nothing, Nothing, Nothing)
+├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing)
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing))
 
 ```
@@ -134,7 +134,7 @@ julia> using Walrus: WindStressBoundaryConditions
 julia> using Oceananigans
 
 julia> wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 0.1, reference_wind_direction = 90.)
-(u = FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64}, Float64}) at (Nothing, Nothing, Nothing), v = FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64}, Float64}) at (Nothing, Nothing, Nothing))
+(u = FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing), v = FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing))
 
 julia> boundary_conditions = (u = FieldBoundaryConditions(top = wind_stress_boundary_conditions.u),
                               v = FieldBoundaryConditions(top = wind_stress_boundary_conditions.v))
@@ -144,14 +144,14 @@ julia> boundary_conditions = (u = FieldBoundaryConditions(top = wind_stress_boun
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── bottom: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64}, Float64}) at (Nothing, Nothing, Nothing)
+├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing)
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing), v = Oceananigans.FieldBoundaryConditions, with boundary conditions
 ├── west: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── bottom: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64}, Float64}) at (Nothing, Nothing, Nothing)
+├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing)
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing))
 
 ```
