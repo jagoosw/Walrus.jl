@@ -10,10 +10,16 @@ export WindStress, WindStressBoundaryConditions, LogarithmicNeutralWind
 
 export SurfaceHeatExchange, SurfaceHeatExchangeBoundaryCondition
 
+using Adapt: adapt
+
+import Adapt: adapt_structure
+
 # This is how we will standarise function vs values, I will have to think of a way to deal with discrete vs continuous at some point
 struct ReturnValue{FT}
     value :: FT
 end
+
+adapt_structure(to, rv::ReturnValue) = ReturnValue(adapt(to, rv.value))
 
 @inline (return_value::ReturnValue)(args...) = return_value.value
 
