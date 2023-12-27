@@ -1,7 +1,7 @@
 name = "Walrus"
 uuid = "bec5164f-1c7a-4c32-8768-be9354254d6a"
 authors = ["Jago Stong-Wright <jagoosw@protonmail.com>"]
-version = "0.4.1"
+version = "0.4.2"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
