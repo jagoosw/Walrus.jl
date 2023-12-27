@@ -2,7 +2,7 @@ module WindStressModel
 
 export WindStress, WindStressBoundaryConditions, LogarithmicNeutralWind
 
-using Roots
+using Roots, Interpolations
 
 using Adapt: adapt
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition
@@ -214,12 +214,25 @@ show(io::IO, wind::WindStress) = println(io, summary(wind), " with:\n",
                                      " Air density: ", wind.air_density, " kg/m³\n",
                                      " Water density: ", wind.water_density, " kg/m³")
 
+struct LogarithmicNeutralWind{FT, Z} # can't think of a good name for this
+  monin_obukhov_stability_length :: FT
+            charnock_coefficient :: FT
+         air_kinematic_viscosity :: FT
+        gravity_wave_coefficient :: FT
+            gravity_acceleration :: FT
+
+                roughness_length :: Z
+end
+
 """
     LogarithmicNeutralWind(; monin_obukhov_stability_length = 0.4
                              charnock_coefficient = 0.014
                              air_kinematic_viscosity = 1.488e-5
                              gravity_wave_coefficient = 0.11
-                             gravity = g_Earth)
+                             gravity = g_Earth,
+
+                             precomputed_roughness_length = false,
+                             precompute_wind_speeds = [0:25/100000:25;])
 
 Returns a `LogarithmicNeutralWind` parameterisation for the surface drag coefficient
 
@@ -239,19 +252,57 @@ z_0=b\\frac{\\nu}{u\\star} + \\frac{a_c}{g}u\\star^2,
 ```
 where ``\\nu`` is the kinematic viscosity of air and g is the acceleration of gravity.
 
-This model itterativly solves these equations to find ``z_0``.
+This model itterativly solves these equations to find ``z_0``. Alternativly, if the flag 
+`precomputed_roughness_length` is set to they are pre computed at `precompute_wind_speeds` 
+between which ``z_0`` is then interpolated during run time.
 
 This parameterisaion is described in [smith1988](@citet)
 """
-@kwdef struct LogarithmicNeutralWind{FT} # can't think of a good name for this
-  monin_obukhov_stability_length :: FT = 0.4
-            charnock_coefficient :: FT = 0.014
-         air_kinematic_viscosity :: FT = 1.488e-5
-        gravity_wave_coefficient :: FT = 0.11
-            gravity_acceleration :: FT = g_Earth
+function LogarithmicNeutralWind(; monin_obukhov_stability_length::FT = 0.4,
+                                  charnock_coefficient::FT = 0.014,
+                                  air_kinematic_viscosity::FT = 1.488e-5,
+                                  gravity_wave_coefficient::FT = 0.11,
+                                  gravity_acceleration::FT = g_Earth,
+
+                                  precomputed_roughness_length = false,
+                                  precompute_wind_speeds = [0:25/100000:25;]) where FT
+
+    if precomputed_roughness_length
+        tmp = LogarithmicNeutralWind(monin_obukhov_stability_length, charnock_coefficient,
+                                     air_kinematic_viscosity, gravity_wave_coefficient, gravity_acceleration,
+                                     nothing)
+
+        κ = monin_obukhov_stability_length
+        ν = air_kinematic_viscosity
+        aᶜ = charnock_coefficient
+        b = gravity_wave_coefficient
+        g = gravity_acceleration
+
+        params = (; κ, ν, aᶜ, b, g)
+
+        n = 100000
+        lengths = zeros(length(precompute_wind_speeds))
+
+        for (n, wind_speed) in enumerate(precompute_wind_speeds)
+            lengths[n] = find_velocity_roughness_length(tmp, wind_speed, 10, params)
+        end
+
+        roughness_length = LinearInterpolation(precompute_wind_speeds, lengths)
+    else
+        roughness_length = nothing
+    end
+
+    Z = typeof(roughness_length)
+
+    return LogarithmicNeutralWind(monin_obukhov_stability_length, charnock_coefficient,
+                                  air_kinematic_viscosity, gravity_wave_coefficient, gravity_acceleration,
+                                  roughness_length)
 end
 
-adapt_structure(to, dc::LogarithmicNeutralWind) = dc
+adapt_structure(to, dc::LogarithmicNeutralWind) = 
+    LogarithmicNeutralWind(dc.monin_obukhov_stability_length, dc.charnock_coefficient,
+                           dc.air_kinematic_viscosity, dc.gravity_wave_coefficient, dc.gravity_acceleration,
+                           adapt(to, roughness_length))
 
 @inline velocity_roughness_length_roots(z₀, params) = 
     log(params.reference_height/z₀)/(params.κ * params.wind_speed) * 
@@ -266,7 +317,7 @@ coefficient model.
 This will sometimes fail as the function is not well behaved at either low reference heights
 (it has been tuned for 10m wind), or high (⪆ 20 m/s).
 """
-@inline function find_velocity_roughness_length(wind_speed, reference_height, params)
+@inline function find_velocity_roughness_length(dc::LogarithmicNeutralWind{<:Any, Nothing}, wind_speed, reference_height, params)
     z₀ = reference_height
     
     upper_bounds_guess = ifelse(wind_speed < 0.05, 0.95 * reference_height, ifelse(wind_speed < 14, 0.5 * reference_height, 0.2 * reference_height))
@@ -275,6 +326,8 @@ This will sometimes fail as the function is not well behaved at either low refer
 
     return z₀
 end
+
+@inline find_velocity_roughness_length(dc::LogarithmicNeutralWind, wind_speed, reference_height, params) = dc.roughness_length(wind_speed)
 
 @inline function (dc::LogarithmicNeutralWind)(wind_speed)
     κ = dc.monin_obukhov_stability_length
@@ -285,7 +338,7 @@ end
 
     params = (; κ, ν, aᶜ, b, g)
 
-    z₀ = find_velocity_roughness_length(wind_speed, 10, params)
+    z₀ = find_velocity_roughness_length(dc, wind_speed, 10, params)
 
     Cᵈ = (params.κ / log(10 / z₀)) ^ 2
 

@@ -230,7 +230,7 @@ end
 
     params = (; κ, ν, aᶜ, b, g)
 
-    z₀ = find_velocity_roughness_length(wind_speed, 10, params)
+    z₀ = find_velocity_roughness_length(drag_coefficient, wind_speed, 10, params)
 
     ū = κ * wind_speed / log(10 / z₀)
 
