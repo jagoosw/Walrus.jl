@@ -22,6 +22,14 @@ struct SurfaceHeatExchange{WS, AT, LH, VP, FT} <: Function
                    air_density :: FT
         air_water_mixing_ratio :: FT
      stephan_boltzman_constant :: FT
+
+    SurfaceHeatExchange(wind_stress::WS, air_temperature::AT, latent_heat_vaporisation::LH,
+                        vapour_pressure::VP, water_specific_heat_capacity::FT, water_density::FT,
+                        air_specific_heat_capacity::FT, air_density::FT, air_water_mixing_ratio::FT,
+                        stephan_boltzman_constant::FT) where {WS, AT, LH, VP, FT} =
+        new{WS, AT, LH, VP, FT}(wind_stress, air_temperature, latent_heat_vaporisation, vapour_pressure,
+                                water_specific_heat_capacity, water_density, air_specific_heat_capacity, air_density,
+                                air_water_mixing_ratio, stephan_boltzman_constant)
 end
 
 adapt_structure(to, sh::SurfaceHeatExchange) = 

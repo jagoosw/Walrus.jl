@@ -18,6 +18,10 @@ struct WindStress{WS, WD, DC, FT} <: Function
           drag_coefficient :: DC
                air_density :: FT
              water_density :: FT
+
+    WindStress(reference_wind_speed::WS, reference_wind_direction::WD,
+               drag_coefficient::DC, air_density::FT, water_density::FT) where {WS, WD, DC, FT} =
+        new{WS, WD, DC, FT}(reference_wind_speed, reference_wind_direction, drag_coefficient, air_density, water_density)
 end
 
 adapt_structure(to, ws::WindStress) = WindStress(adapt(to, ws.reference_wind_speed),
