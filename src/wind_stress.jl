@@ -23,8 +23,8 @@ end
 adapt_structure(to, ws::WindStress) = WindStress(adapt(to, ws.reference_wind_speed),
                                                  adapt(to, ws.reference_wind_direction),
                                                  adapt(to, ws.drag_coefficient),
-                                                 adapt(to, ws.air_density),
-                                                 adapt(to, ws.water_density))
+                                                 ws.air_density,
+                                                 ws.water_density)
 
 """
     WindStress(; reference_wind_speed, 
