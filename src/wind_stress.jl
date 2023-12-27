@@ -292,8 +292,6 @@ function LogarithmicNeutralWind(; monin_obukhov_stability_length::FT = 0.4,
         roughness_length = nothing
     end
 
-    Z = typeof(roughness_length)
-
     return LogarithmicNeutralWind(monin_obukhov_stability_length, charnock_coefficient,
                                   air_kinematic_viscosity, gravity_wave_coefficient, gravity_acceleration,
                                   roughness_length)

@@ -19,7 +19,7 @@
 
     time_step!(model, 1)
     
-    @btime for n=1:10000
+    for n=1:10000
         time_step!(model, 1)
     end
 
@@ -53,7 +53,7 @@
 
     time_step!(model2, 1)
 
-    @btime for n=1:10000
+    for n=1:10000
         time_step!(model2, 1)
     end
 

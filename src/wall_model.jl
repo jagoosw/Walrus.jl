@@ -9,7 +9,7 @@ module WallStressModel
 
 export WallStress, WallStressBoundaryConditions
 
-using Roots
+using Roots, Interpolations
 
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.Fields: Center, Face
@@ -17,6 +17,14 @@ using Oceananigans.Grids: znode
 
 import Adapt: adapt_structure
 import Base: summary, show
+
+struct WallStress{FT, U} <: Function
+    von_Karman_constant :: FT
+    kinematic_viscosity :: FT
+                      B :: FT
+
+      friction_velocities :: U
+end
 
 """
     WallStress(; von_Karman_constant = 0.4,
@@ -65,15 +73,46 @@ julia> boundary_conditions = (u = FieldBoundaryConditions(bottom = FluxBoundaryC
 
 ```
 """
-@kwdef struct WallStress{FT} <: Function
-    von_Karman_constant :: FT = 0.4
-    kinematic_viscosity :: FT = 1.15e-6
-                      B :: FT = 5.2
+function WallStress(; von_Karman_constant::FT = 0.4,
+                      kinematic_viscosity::FT = 1.15e-6,
+                      B::FT = 5.2,
+                      precomputed_friction_velocities = false,
+                      precompute_speeds = [0:25/100000:25;],
+                      grid = nothing) where FT
+    
+    if precomputed_friction_velocities
+        tmp = WallStress(von_Karman_constant, kinematic_viscosity, B, nothing)
+
+        ν = kinematic_viscosity
+        κ = von_Karman_constant
+
+        z₁ = znode(1, grid, Center()) - znode(1, grid, Face())
+
+        n = 100000
+        velocities = zeros(length(precompute_speeds))
+
+        for (n, speed) in enumerate(precompute_speeds)
+            params = (; z₁, κ, ν, B)
+            velocities[n] = find_friction_velocity(tmp, speed, params)
+        end
+
+        friction_velocities = LinearInterpolation(precompute_speeds, velocities)
+    else
+        friction_velocities = nothing
+    end
+
+    return WallStress(von_Karman_constant, kinematic_viscosity, B, friction_velocities)
 end
 
 adapt_structure(to, ws::WallStress) = ws
 
 @inline stress_velocity(uₜ, params) = log(params.z₁ * uₜ / (params.ν + eps(0.0))) / (params.κ + eps(0.0)) + params.B - params.U₁ / (uₜ + eps(0.0))
+
+@inline find_friction_velocity(::WallStress{<:Any, Nothing}, U₁, params) = 
+    find_zero(stress_velocity, (0., Inf), Bisection(); p = merge(params, (; U₁)), maxiters = 10^5)
+
+@inline find_friction_velocity(ws::WallStress, U₁, params) = 
+    ws.friction_velocities(U₁)
 
 @inline function (wall_stress::WallStress)(i, j, grid, clock, model_fields, ::Val{direction}) where direction
     ν = wall_stress.kinematic_viscosity
@@ -89,7 +128,7 @@ adapt_structure(to, ws::WallStress) = ws
 
     U₁ = sqrt(u ^ 2 + v ^ 2)
 
-    uₜ = find_zero(stress_velocity, (0., Inf), Bisection(); p = (; U₁, z₁, κ, ν, B), maxiters = 10^5)
+    uₜ = find_friction_velocity(wall_stress, U₁, (; z₁, κ, ν, B))
 
     U₁ == 0 && (uₜ = 0)
 
@@ -140,13 +179,19 @@ julia> boundary_conditions = (u = FieldBoundaryConditions(bottom = stress_bounda
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing))
 ```
 """
-function WallStressBoundaryConditions(; von_Karman_constant = 0.4,
-                                        kinematic_viscosity = 1e-6,
-                                        B = 5.2)
+function WallStressBoundaryConditions(; von_Karman_constant::FT = 0.4,
+                                        kinematic_viscosity::FT = 1.15e-6,
+                                        B::FT = 5.2,
+                                        precomputed_friction_velocities = false,
+                                        precompute_speeds = [0:25/100000:25;],
+                                        grid = nothing) where FT
 
-    wall_stress_instance = WallStress(von_Karman_constant,
-                                      kinematic_viscosity,
-                                      B)
+    wall_stress_instance = WallStress(; von_Karman_constant,
+                                        kinematic_viscosity,
+                                        B,
+                                        precomputed_friction_velocities,
+                                        precompute_speeds,
+                                        grid)
 
     u = FluxBoundaryCondition(wall_stress_instance, discrete_form = true, parameters = Val(:x))
 
