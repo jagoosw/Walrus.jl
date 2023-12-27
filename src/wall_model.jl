@@ -11,6 +11,8 @@ export WallStress, WallStressBoundaryConditions
 
 using Roots, Interpolations
 
+using Adapt: adapt
+
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.Fields: Center, Face
 using Oceananigans.Grids: znode
@@ -25,6 +27,9 @@ struct WallStress{FT, U} <: Function
 
       friction_velocities :: U
 end
+
+adapt_structure(to, ws::WallStress) = WallStress(ws.von_Karman_constant, ws.kinematic_viscosity,
+                                                 ws.B, adapt(to, ws.friction_velocities))
 
 """
     WallStress(; von_Karman_constant = 0.4,
@@ -103,8 +108,6 @@ function WallStress(; von_Karman_constant::FT = 0.4,
 
     return WallStress(von_Karman_constant, kinematic_viscosity, B, friction_velocities)
 end
-
-adapt_structure(to, ws::WallStress) = ws
 
 @inline stress_velocity(uₜ, params) = log(params.z₁ * uₜ / (params.ν + eps(0.0))) / (params.κ + eps(0.0)) + params.B - params.U₁ / (uₜ + eps(0.0))
 
