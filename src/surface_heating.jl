@@ -216,12 +216,14 @@ end
 
     z₀ = find_velocity_roughness_length(wind_speed, 10, params)
 
-    ū = κ * wind_speed / log(2 / z₀)
+    ū = κ * wind_speed / log(10 / z₀)
+
+    isfinite(ū) || ū = 0
 
     Rᵣ = ū * z₀ / params.ν
     zₒₜ = min(1.15e-4, 5.5e-5 * Rᵣ ^ -0.6)
 
-    result = params.κ ^ 2 / (log(2/z₀) * log(2/zₒₜ))
+    result = params.κ ^ 2 / (log(10/z₀) * log(10/zₒₜ))
 
     isfinite(result) || (result = 0) # this should only occur if wind speed is zero in which case stress is zero anyway
 
