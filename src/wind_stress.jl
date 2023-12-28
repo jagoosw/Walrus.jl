@@ -236,7 +236,8 @@ end
                              gravity = g_Earth,
 
                              precomputed_roughness_length = false,
-                             precompute_wind_speeds = [0:25/100000:25;])
+                             precompute_wind_speeds = [0:25/100000:25;],
+                             arch = CPU())
 
 Returns a `LogarithmicNeutralWind` parameterisation for the surface drag coefficient
 
@@ -258,7 +259,8 @@ where ``\\nu`` is the kinematic viscosity of air and g is the acceleration of gr
 
 This model itterativly solves these equations to find ``z_0``. Alternativly, if the flag 
 `precomputed_roughness_length` is set to they are pre computed at `precompute_wind_speeds` 
-between which ``z_0`` is then interpolated during run time.
+between which ``z_0`` is then interpolated during run time. Precomputed velocities are 
+converted to appropriate types for `arch` (i.e. `CPU()` or `GPU()`)
 
 This parameterisaion is described in [smith1988](@citet)
 """

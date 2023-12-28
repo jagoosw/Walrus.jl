@@ -41,7 +41,8 @@ adapt_structure(to, ws::WallStress) = WallStress(ws.von_Karman_constant, ws.kine
                  B = 5.2,
                  precomputed_friction_velocities = false,
                  precompute_speeds = [0:25/100000:25;],
-                 grid = nothing)
+                 grid = nothing,
+                 arch = isnothing(grid) ? CPU() : architecture(grid))
 
 Returns a wall stress model for LES simulation with default parameters similar
 to that proposed in [SCHUMANN1975376](@citet), [HARTEL1996283](@citet),
@@ -60,6 +61,7 @@ Keyword Arguments
 - `precompute_speeds`: bottom water speeds to precompute friction velocities for, 
   this should encompas the range of speeds possible in your simulation
 - `grid`: the grid to precompute the friction velocities for
+- `arch`: architecture to adapt precomputed friction velocities for
 
 Example
 =======
