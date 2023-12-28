@@ -3,6 +3,7 @@ module Interpolations
 export SimpleInterpolation
 
 using Adapt: adapt
+using Oceananigans.Architectures: arch_array
 
 import Adapt: adapt_structure
 
@@ -12,7 +13,7 @@ struct SimpleInterpolation{R, V}
 end
 
 adapt_structure(to, itp::SimpleInterpolation) = SimpleInterpolation(adapt(to, itp.range),
-                                                                    adapt(to, itp.values))
+                                                                    arch_array(to, itp.values)) # should adapt not work here?
 
 function SimpleInterpolation(range::Array, values)
     x₀ = minimum(range)
