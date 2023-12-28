@@ -17,6 +17,8 @@ using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.Fields: Center, Face
 using Oceananigans.Grids: znode
 
+using Oceananigans.Architectures: arch_array, CPU, architecture
+
 using Walrus.Interpolations: SimpleInterpolation
 
 import Adapt: adapt_structure
@@ -94,7 +96,8 @@ function WallStress(; von_Karman_constant::FT = 0.4,
                       B::FT = 5.2,
                       precomputed_friction_velocities = false,
                       precompute_speeds = [0:25/100000:25;],
-                      grid = nothing) where FT
+                      grid = nothing,
+                      arch = isnothing(grid) ? CPU() : architecture(grid)) where FT
     
     if precomputed_friction_velocities
         tmp = WallStress(von_Karman_constant, kinematic_viscosity, B, nothing)
@@ -112,7 +115,7 @@ function WallStress(; von_Karman_constant::FT = 0.4,
             velocities[n] = find_friction_velocity(tmp, speed, params)
         end
 
-        friction_velocities = SimpleInterpolation(precompute_speeds, velocities)
+        friction_velocities = SimpleInterpolation(precompute_speeds, velocities; arch)
     else
         friction_velocities = nothing
     end

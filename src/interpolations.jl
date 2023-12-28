@@ -3,7 +3,8 @@ module Interpolations
 export SimpleInterpolation
 
 using Adapt: adapt
-using Oceananigans.Architectures: arch_array
+
+using Oceananigans.Architectures: arch_array, CPU
 
 import Adapt: adapt_structure
 
@@ -13,16 +14,16 @@ struct SimpleInterpolation{R, V}
 end
 
 adapt_structure(to, itp::SimpleInterpolation) = SimpleInterpolation(adapt(to, itp.range),
-                                                                    arch_array(to, itp.values)) # should adapt not work here?
+                                                                    adapt(to, itp.values))
 
-function SimpleInterpolation(range::Array, values)
+function SimpleInterpolation(range::Array, values; arch = CPU())
     x₀ = minimum(range)
 
     (range[2] - range[1] ≈ range[end] - range[end - 1]) || throw(ArgumentError("Interpolation range must be regularly spaced"))
 
     Δx = range[2] - range[1]
 
-    return SimpleInterpolation((; x₀, Δx), values)
+    return SimpleInterpolation((; x₀, Δx), arch_array(arch, values))
 end
 
 
