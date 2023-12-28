@@ -38,7 +38,7 @@ adapt_structure(to, ws::WallStress) = WallStress(ws.von_Karman_constant, ws.kine
                  kinematic_viscosity = 1e-6,
                  B = 5.2,
                  precomputed_friction_velocities = false,
-                 precompute_speeds = 0:25/100000:25,
+                 precompute_speeds = [0:25/100000:25;],
                  grid = nothing)
 
 Returns a wall stress model for LES simulation with default parameters similar
@@ -93,7 +93,7 @@ function WallStress(; von_Karman_constant::FT = 0.4,
                       kinematic_viscosity::FT = 1.15e-6,
                       B::FT = 5.2,
                       precomputed_friction_velocities = false,
-                      precompute_speeds = 0:25/100000:25,
+                      precompute_speeds = [0:25/100000:25;],
                       grid = nothing) where FT
     
     if precomputed_friction_velocities
@@ -112,7 +112,7 @@ function WallStress(; von_Karman_constant::FT = 0.4,
             velocities[n] = find_friction_velocity(tmp, speed, params)
         end
 
-        friction_velocities = SimpleInterpolation((x₀ = minimum(precompute_speeds), Δx = Float64(precompute_speeds.step)), velocities)
+        friction_velocities = SimpleInterpolation(precompute_speeds, velocities)
     else
         friction_velocities = nothing
     end
@@ -157,7 +157,7 @@ end
     WallStressBoundaryConditions(; von_Karman_constant = 0.4,
                                    kinematic_viscosity = 1e-6,
                                    B = 5.2,
-                                   precompute_speeds = 0:25/100000:25,
+                                   precompute_speeds = [0:25/100000:25;],
                                    grid = nothing)
 
 Convenience constructor to setup `WallStress` boundary conditions.
@@ -206,7 +206,7 @@ function WallStressBoundaryConditions(; von_Karman_constant::FT = 0.4,
                                         kinematic_viscosity::FT = 1.15e-6,
                                         B::FT = 5.2,
                                         precomputed_friction_velocities = false,
-                                        precompute_speeds = 0:25/100000:25,
+                                        precompute_speeds = [0:25/100000:25;],
                                         grid = nothing) where FT
 
     wall_stress_instance = WallStress(; von_Karman_constant,
