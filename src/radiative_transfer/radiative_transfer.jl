@@ -17,7 +17,6 @@ using Oceananigans.Fields: CenterField
 using Oceananigans.Forcings: Forcing
 using Oceananigans.Grids: node, znode, Center, Face
 using Oceananigans.Utils: launch!
-using Oceananigans.Operators: Azᶠᶠᶜ
 
 using KernelAbstractions.Extras: @unroll
 

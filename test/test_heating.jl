@@ -18,6 +18,8 @@
     # Density and specific head are 1 so the water should have increased in temp by ~6.3212 K
     @test model.tracers.T[1, 1, 10] ≈ 10 * (1 - exp(-1))
 
+    # TODO: change this test so it is actually correct when spacing is not 1 in all dimensions
+
     #####
     ##### Test radiative heating/cooling (no sensible or latent flux)
     #####
