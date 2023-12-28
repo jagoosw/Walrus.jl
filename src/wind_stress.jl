@@ -265,7 +265,7 @@ function LogarithmicNeutralWind(; monin_obukhov_stability_length::FT = 0.4,
                                   gravity_acceleration::FT = g_Earth,
 
                                   precomputed_roughness_length = false,
-                                  precompute_wind_speeds = [0:25/100000:25;]) where FT
+                                  precompute_wind_speeds = 0:25/100000:25) where FT
 
     if precomputed_roughness_length
         tmp = LogarithmicNeutralWind(monin_obukhov_stability_length, charnock_coefficient,
@@ -287,7 +287,7 @@ function LogarithmicNeutralWind(; monin_obukhov_stability_length::FT = 0.4,
             lengths[n] = find_velocity_roughness_length(tmp, wind_speed, 10, params)
         end
 
-        roughness_length = interpolate(precompute_wind_speeds, lengths, Linear())
+        roughness_length = scale(interpolate(lengths, Linear()), precompute_wind_speeds)
     else
         roughness_length = nothing
     end
