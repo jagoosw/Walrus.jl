@@ -287,7 +287,7 @@ function LogarithmicNeutralWind(; monin_obukhov_stability_length::FT = 0.4,
             lengths[n] = find_velocity_roughness_length(tmp, wind_speed, 10, params)
         end
 
-        roughness_length = LinearInterpolation(precompute_wind_speeds, lengths)
+        roughness_length = interpolate(precompute_wind_speeds, lengths, Gridded(Linear()))
     else
         roughness_length = nothing
     end
