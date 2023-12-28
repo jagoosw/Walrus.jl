@@ -186,7 +186,7 @@ function WallStressBoundaryConditions(; von_Karman_constant::FT = 0.4,
                                         kinematic_viscosity::FT = 1.15e-6,
                                         B::FT = 5.2,
                                         precomputed_friction_velocities = false,
-                                        precompute_speeds = [0:25/100000:25;],
+                                        precompute_speeds = 0:25/100000:25;,
                                         grid = nothing) where FT
 
     wall_stress_instance = WallStress(; von_Karman_constant,
