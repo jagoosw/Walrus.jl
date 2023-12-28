@@ -2,12 +2,15 @@ module WindStressModel
 
 export WindStress, WindStressBoundaryConditions, LogarithmicNeutralWind
 
-using Roots, Interpolations
+using Roots
 
 using Adapt: adapt
+
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.BuoyancyModels: g_Earth
+
 using Walrus: ReturnValue, display_input
+using Walrus.Interpolations: SimpleInterpolation
 
 import Adapt: adapt_structure
 import Base: summary, show
@@ -287,7 +290,7 @@ function LogarithmicNeutralWind(; monin_obukhov_stability_length::FT = 0.4,
             lengths[n] = find_velocity_roughness_length(tmp, wind_speed, 10, params)
         end
 
-        roughness_length = scale(interpolate(lengths, BSpline(Cubic(Line(OnGrid())))), precompute_wind_speeds)
+        roughness_length = SimpleInterpolation((x₀ = minimum(precompute_speeds), Δx = Float64(precompute_speeds.step)), velocities)
     else
         roughness_length = nothing
     end

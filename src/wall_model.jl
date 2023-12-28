@@ -9,13 +9,15 @@ module WallStressModel
 
 export WallStress, WallStressBoundaryConditions
 
-using Roots, Interpolations
+using Roots
 
 using Adapt: adapt
 
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.Fields: Center, Face
 using Oceananigans.Grids: znode
+
+using Walrus.Interpolations: SimpleInterpolation
 
 import Adapt: adapt_structure
 import Base: summary, show
@@ -101,7 +103,7 @@ function WallStress(; von_Karman_constant::FT = 0.4,
             velocities[n] = find_friction_velocity(tmp, speed, params)
         end
 
-        friction_velocities = scale(interpolate(velocities, BSpline(Cubic(Line(OnGrid())))), precompute_speeds)
+        friction_velocities = SimpleInterpolation((x₀ = minimum(precompute_speeds), Δx = Float64(precompute_speeds.step)), velocities)
     else
         friction_velocities = nothing
     end
@@ -111,8 +113,13 @@ end
 
 @inline stress_velocity(uₜ, params) = log(params.z₁ * uₜ / (params.ν + eps(0.0))) / (params.κ + eps(0.0)) + params.B - params.U₁ / (uₜ + eps(0.0))
 
-@inline find_friction_velocity(::WallStress{<:Any, Nothing}, U₁, params) = 
-    find_zero(stress_velocity, (0., Inf), Bisection(); p = merge(params, (; U₁)), maxiters = 10^5)
+@inline function find_friction_velocity(::WallStress{<:Any, Nothing}, U₁, params)
+    uₜ = 0
+    
+    U₁ == 0 || (uₜ = find_zero(stress_velocity, (0., Inf), Bisection(); p = merge(params, (; U₁)), maxiters = 10^5))
+
+    return uₜ
+end
 
 @inline find_friction_velocity(ws::WallStress, U₁, params) = 
     ws.friction_velocities(U₁)
@@ -132,8 +139,6 @@ end
     U₁ = sqrt(u ^ 2 + v ^ 2)
 
     uₜ = find_friction_velocity(wall_stress, U₁, (; z₁, κ, ν, B))
-
-    U₁ == 0 && (uₜ = 0)
 
     return ifelse(direction == :x, -u / (U₁ + eps(0.0)) * uₜ ^ 2, -v / (U₁ + eps(0.0)) * uₜ ^ 2)
 end
