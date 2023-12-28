@@ -300,7 +300,7 @@ end
 adapt_structure(to, dc::LogarithmicNeutralWind) = 
     LogarithmicNeutralWind(dc.monin_obukhov_stability_length, dc.charnock_coefficient,
                            dc.air_kinematic_viscosity, dc.gravity_wave_coefficient, dc.gravity_acceleration,
-                           adapt(to, roughness_length))
+                           adapt(to, dc.roughness_length))
 
 @inline velocity_roughness_length_roots(z₀, params) = 
     log(params.reference_height/z₀)/(params.κ * params.wind_speed) * 
