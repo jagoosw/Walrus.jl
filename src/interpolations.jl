@@ -14,6 +14,16 @@ end
 adapt_structure(to, itp::SimpleInterpolation) = SimpleInterpolation(adapt(to, itp.range),
                                                                     adapt(to, itp.values))
 
+function SimpleInterpolation(range::Array, values)
+    x₀ = minimum(range)
+
+    (range[2] - range[1] ≈ range[end] - range[end - 1]) || throw(ArgumentError("Interpolation range must be regularly spaced"))
+
+    Δx = range[2] - range[1]
+
+    return SimpleInterpolation((; x₀, Δx), values)
+end
+
 
 function (itp::SimpleInterpolation)(x)
     n₁ = floor(Int, (x - itp.range.x₀) / itp.range.Δx)
