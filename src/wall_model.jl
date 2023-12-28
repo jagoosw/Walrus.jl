@@ -36,12 +36,17 @@ adapt_structure(to, ws::WallStress) = WallStress(ws.von_Karman_constant, ws.kine
 """
     WallStress(; von_Karman_constant = 0.4,
                  kinematic_viscosity = 1e-6,
-                 B = 5.2)
+                 B = 5.2,
+                 precomputed_friction_velocities = false,
+                 precompute_speeds = 0:25/100000:25,
+                 grid = nothing)
 
 Returns a wall stress model for LES simulation with default parameters similar
 to that proposed in [SCHUMANN1975376](@citet), [HARTEL1996283](@citet),
 [Piomelli1989](@citet), and [taylor2007](@citet).
 
+Friction velocities will be precomputed at `precompute_speeds` if 
+`precomputed_friction_velocities` is true and `grid` is provided.
 
 Keyword Arguments
 =================
@@ -49,6 +54,10 @@ Keyword Arguments
 - `von_Karman_constant`: the von Karman wall stress constant
 - `kinematic_viscosity`: kinematic viscosity of the water above the wall
 - `B`: wall stress constant 
+- `precomputed_friction_velocities`: precompute friction velocities?
+- `precompute_speeds`: bottom water speeds to precompute friction velocities for, 
+  this should encompas the range of speeds possible in your simulation
+- `grid`: the grid to precompute the friction velocities for
 
 Example
 =======
@@ -147,7 +156,9 @@ end
 """
     WallStressBoundaryConditions(; von_Karman_constant = 0.4,
                                    kinematic_viscosity = 1e-6,
-                                   B = 5.2)
+                                   B = 5.2,
+                                   precompute_speeds = 0:25/100000:25,
+                                   grid = nothing)
 
 Convenience constructor to setup `WallStress` boundary conditions.
 
@@ -157,6 +168,10 @@ Keyword Arguments
 - `von_Karman_constant`: the von Karman wall stress constant
 - `kinematic_viscosity`: kinematic viscosity of the water above the wall
 - `B`: wall stress constant 
+- `precomputed_friction_velocities`: precompute friction velocities?
+- `precompute_speeds`: bottom water speeds to precompute friction velocities for, 
+  this should encompas the range of speeds possible in your simulation
+- `grid`: the grid to precompute the friction velocities for
 
 Example
 =======
