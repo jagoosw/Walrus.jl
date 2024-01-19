@@ -1,5 +1,7 @@
 module Walrus
 
+export SimpleInterpolation
+
 export WallStress, WallStressBoundaryConditions
 
 export HomogeneousBodyHeating
@@ -26,12 +28,14 @@ adapt_structure(to, rv::ReturnValue) = ReturnValue(adapt(to, rv.value))
 display_input(return_value::ReturnValue) = return_value.value
 display_input(::Function) = "Function"
 
+include("interpolations.jl")
 include("wall_model.jl")
 include("radiative_transfer/radiative_transfer.jl")
 include("tidal_forcings.jl")
 include("wind_stress.jl")
 include("surface_heating.jl")
 
+using .Interpolations
 using .WallStressModel
 using .RadiativeTransfer
 using .TidalForcings
