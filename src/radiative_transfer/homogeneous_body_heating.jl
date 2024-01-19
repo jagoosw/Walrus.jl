@@ -93,8 +93,9 @@ end
 
     t = clock.time
 
-    return heating.surface_flux(x, y, t) * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) / ((zᶠ⁺ - zᶠ) * (ρ * cₚ))
-end 
+    return α * heating.surface_flux(x, y, t) * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) / (ρ * cₚ)
+end
+
 
 summary(::HomogeneousBodyHeating) = string("Single band light attenuation and body heating model")
 show(io::IO, body_heating::HomogeneousBodyHeating) = println(io, string(summary(body_heating), " with: \n",
