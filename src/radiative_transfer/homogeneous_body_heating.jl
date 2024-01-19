@@ -94,7 +94,7 @@ end
     t = clock.time
     A = Azᶠᶠᶜ(i, j, k, grid)
 
-    return heating.surface_flux(x, y, t) * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) * A / (ρ * cₚ)
+    return α * heating.surface_flux(x, y, t) * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) / (ρ * cₚ)
 end
 
 summary(::HomogeneousBodyHeating) = string("Single band light attenuation and body heating model")
