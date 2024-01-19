@@ -92,10 +92,10 @@ end
     zᶠ⁺ = znode(i, j, k + 1, grid, Center(), Center(), Face())
 
     t = clock.time
-    A = Azᶠᶠᶜ(i, j, k, grid)
 
     return α * heating.surface_flux(x, y, t) * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) / (ρ * cₚ)
 end
+
 
 summary(::HomogeneousBodyHeating) = string("Single band light attenuation and body heating model")
 show(io::IO, body_heating::HomogeneousBodyHeating) = println(io, string(summary(body_heating), " with: \n",
