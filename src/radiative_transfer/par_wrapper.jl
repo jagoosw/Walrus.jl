@@ -3,7 +3,7 @@
 
 using Oceananigans.Operators: ∂zᶜᶜᶜ
 
-struct PARModelHeating{L, FT}
+struct PARModelHeating{L, FT}  <: Function
  light_attenuation_model :: L
      water_heat_capacity :: FT
            water_density :: FT
