@@ -25,11 +25,6 @@ import Oceananigans.Biogeochemistry: update_biogeochemical_state!, update_tenden
 import Adapt: adapt_structure
 import Base: summary, show
 
-RadiationField(grid, surface_flux) = CenterField(grid; 
-                                                 boundary_conditions = 
-                                                    regularize_field_boundary_conditions(
-                                                        FieldBoundaryConditions(top = ValueBoundaryCondition(surface_flux)),
-                                                                                grid, 
-                                                                                :radiaton))
 include("homogeneous_body_heating.jl")
+include("par_wrapper.jl")
 end # module
