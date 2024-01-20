@@ -1,5 +1,5 @@
 # extends the OceanBioME light attenuation model to heat the water
-# assumes that all absorbed light (including that absorbed by phytoplankton) warms the water
+# assumes that all absorbed light (including that absorbed by phytoplankton etc.) warms the water
 
 using Oceananigans.Operators: ∂zᶜᶜᶜ
 
@@ -11,7 +11,7 @@ end
 
 function PARModelHeating(; light_attenuation_model::L,
                            water_heat_capacity::FT = 3991.0, 
-                           water_density::FT = 1026.0)
+                           water_density::FT = 1026.0) where {L, FT}
     return PARModelHeating{L, FT}(light_attenuation_model, water_heat_capacity, water_density)
 end
 
