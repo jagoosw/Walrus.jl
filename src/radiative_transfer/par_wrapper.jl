@@ -23,8 +23,9 @@ adapt_structure(to, bh::PARModelHeating) =
 @inline function (heating::PARModelHeating)(i, j, k, grid, clock, model_fields)
     ρ = heating.water_density
     cₚ = heating.water_heat_capacity
+    PAR = heating.light_attenuation_model.field
 
-    light_attenuation = ∂zᶜᶜᶜ(i, j, k, grid, heating.field)
+    light_attenuation = ∂zᶜᶜᶜ(i, j, k, grid, PAR)
 
     return light_attenuation / (ρ * cₚ)
 end
