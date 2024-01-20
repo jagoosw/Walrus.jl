@@ -247,13 +247,14 @@ end
 end
 
 # parameterisation for vapour pressure with default coefficients from [alduchov1996](@citet).
+# THIS MIGHT BE WRONG!!
 @kwdef struct AugustRocheMagnusVapourPressure{FT}
     a :: FT = 0.61094
     b :: FT = 17.625
     c :: FT = 243.04
 end
 
-@inline (q::AugustRocheMagnusVapourPressure)(T) = q.a * exp(q.b * T / (T + q.c)) / 1000 # 
+@inline (q::AugustRocheMagnusVapourPressure)(T) = q.a * exp(q.b * T / (T + q.c)) / 1000
 
 # parameterisation for latent heat of vaporisation for water [yu2019](@citet)
 @kwdef struct EmpiricalLatentHeatVaporisation{FT}

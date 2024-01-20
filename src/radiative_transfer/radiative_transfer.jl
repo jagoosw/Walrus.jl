@@ -5,7 +5,7 @@ Includes models for ratiative transfer through water which can induce body heati
 """
 module RadiativeTransfer
 
-export HomogeneousBodyHeating
+export HomogeneousBodyHeating, PARModelHeating
 
 using KernelAbstractions
 using Walrus: ReturnValue
