@@ -1,5 +1,5 @@
 @testset "Wind stress" begin
-    grid = RectilinearGrid(size = (2, 2, 2), extent = (2, 2, 2))
+    grid = RectilinearGrid(arch; size = (2, 2, 2), extent = (2, 2, 2))
 
     wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 0., reference_wind_direction = 90.)
 

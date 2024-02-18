@@ -1,5 +1,5 @@
 @testset "Wall model" begin
-    grid = RectilinearGrid(size = (2, 2, 2), extent = (2, 2, 2))
+    grid = RectilinearGrid(arch; size = (2, 2, 2), extent = (2, 2, 2))
 
     stress_boundary_conditions = WallStressBoundaryConditions()
 

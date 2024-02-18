@@ -1,4 +1,6 @@
-using Walrus, Oceananigans, Test
+using Walrus, Oceananigans, OceanBioME, Test
+
+arch = CPU()
 
 include("test_interpolation.jl")
 include("test_wind_model.jl")
