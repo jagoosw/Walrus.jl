@@ -1,6 +1,9 @@
 using Oceananigans.Biogeochemistry: AbstractContinuousFormBiogeochemistry
 import Oceananigans.Biogeochemistry: required_biogeochemical_tracers
 
+struct JustPhytoplankton <: AbstractContinuousFormBiogeochemistry end
+required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
+
 @testset "Surface heat exchange" begin
     grid = RectilinearGrid(arch; extent = (1, 1, 10), size = (1, 1, 10))
 
@@ -160,9 +163,6 @@ import Oceananigans.Biogeochemistry: required_biogeochemical_tracers
 
     light_attenuation_model = TwoBandPhotosyntheticallyActiveRadiation(; grid)
     body_heating = PARModelHeating(; light_attenuation_model)
-
-    struct JustPhytoplankton <: AbstractContinuousFormBiogeochemistry end
-    required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     biogeochemistry = Biogeochemistry(JustPhytoplankton(); light_attenuation = light_attenuation_model)
 
