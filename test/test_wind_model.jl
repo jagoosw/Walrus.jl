@@ -32,7 +32,7 @@
     wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 0., 
                                                                      reference_wind_direction = 90., 
                                                                      drag_coefficient = 
-                                                                        LogarithmicNeutralWind(; precomputed_roughness_length = true))
+                                                                        LogarithmicNeutralWind(; precomputed_roughness_length = true, arch))
 
     model2 = NonhydrostaticModel(; grid, boundary_conditions = (u = FieldBoundaryConditions(top = wind_stress_boundary_conditions.u),
                                                                 v = FieldBoundaryConditions(top = wind_stress_boundary_conditions.v)))
@@ -46,7 +46,7 @@
     wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 1., 
                                                                      reference_wind_direction = 90., 
                                                                      drag_coefficient = 
-                                                                        LogarithmicNeutralWind(; precomputed_roughness_length = true))
+                                                                        LogarithmicNeutralWind(; precomputed_roughness_length = true, arch))
 
     model2 = NonhydrostaticModel(; grid, boundary_conditions = (u = FieldBoundaryConditions(top = wind_stress_boundary_conditions.u),
                                                                 v = FieldBoundaryConditions(top = wind_stress_boundary_conditions.v)))
