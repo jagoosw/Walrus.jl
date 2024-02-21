@@ -139,7 +139,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     
     time_step!(model, 1)
 
-    @test Array(interior(model.tracers, 1, 1, 10))[1] ≈ 0
+    @test Array(interior(model.tracers.T, 1, 1, 10))[1] ≈ 0
 
     # when the water has higher saturation pressure, it looses heat
     set!(model, T = 1)
