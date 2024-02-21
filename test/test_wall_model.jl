@@ -10,7 +10,7 @@
         time_step!(model, 1)
     end
 
-    @test all(model.velocities.u .≈ 0) && all(model.velocities.v .≈ 0) && all(model.velocities.w .≈ 0) # no velocity change when no velocity
+    @test all(Array(interior(model.velocities.u)) .≈ 0) && all(Array(interior(model.velocities.v)) .≈ 0) && all(Array(interior(model.velocities.w)) .≈ 0) # no velocity change when no velocity
 
     set!(model, u = 1)
 
@@ -18,7 +18,7 @@
         time_step!(model, 1)
     end
 
-    @test all(interior(model.velocities.u, :, :, 1) .< 1) # when moving, it is slowed
+    @test all(Array(interior(model.velocities.u, :, :, 1)) .< 1) # when moving, it is slowed
 
     # precomputed 
 
@@ -31,7 +31,7 @@
         time_step!(model2, 1)
     end
 
-    @test all(model2.velocities.u .≈ 0) && all(model2.velocities.v .≈ 0) && all(model2.velocities.w .≈ 0) # no velocity change when no velocity
+    @test all(Array(interior(model2.velocities.u)) .≈ 0) && all(Array(interior(model2.velocities.v)) .≈ 0) && all(Array(interior(model2.velocities.w)) .≈ 0) # no velocity change when no velocity
 
     set!(model2, u = 1)
 
@@ -39,7 +39,7 @@
         time_step!(model2, 1)
     end
 
-    @test all(interior(model2.velocities.u, :, :, 1) .< 1) # when moving, it is slowed
+    @test all(Array(interior(model2.velocities.u, :, :, 1)) .< 1) # when moving, it is slowed
 
-    @test all(model.velocities.u .≈ model2.velocities.u)
+    @test all(Array(interior(model.velocities.u)) .≈ Array(interior(model2.velocities.u)))
 end
