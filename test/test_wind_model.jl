@@ -41,7 +41,7 @@
         time_step!(model2, 1)
     end
 
-    @test all(Array(model2.velocities.u) .≈ 0) # no wind no stress
+    @test all(Array(interior(model2.velocities.u)) .≈ 0) # no wind no stress
 
     wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 1., 
                                                                      reference_wind_direction = 90., 
@@ -59,7 +59,7 @@
 
     @test -1 <= Array(interior(model2.velocities.u, 1, 1, 2))[1] < 0.1
     @test Array(interior(model2.velocities.u, 1, 1, 1))[1] ≈ 0
-    @test all(Array(model2.velocities.v) .≈ 0)
+    @test all(Array(interior(model2.velocities.v)) .≈ 0)
 
-    @test all(Array(model.velocities.u) .≈ Array(model2.velocities.u))
+    @test all(Array(interior(model.velocities.u)) .≈ Array(interior(model2.velocities.u)))
 end
