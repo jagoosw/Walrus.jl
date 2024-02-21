@@ -2,7 +2,7 @@
 
 julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "c12730e5d15cf5bacf056cd822fb8cf6833365ca"
+project_hash = "3596114047343fcbe680e39b942f992228682f49"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -592,6 +592,12 @@ version = "400.902.208+0"
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 version = "1.2.0"
+
+[[deps.OceanBioME]]
+deps = ["Adapt", "JLD2", "KernelAbstractions", "Oceananigans", "Roots", "StructArrays"]
+git-tree-sha1 = "64f2b24ce56e98dac554f88ff75528e7ed2d7e8d"
+uuid = "a49af516-9db8-4be4-be45-1dad61c5a376"
+version = "0.9.2"
 
 [[deps.Oceananigans]]
 deps = ["Adapt", "CUDA", "Crayons", "CubedSphere", "Dates", "Distances", "DocStringExtensions", "FFTW", "Glob", "IncompleteLU", "InteractiveUtils", "IterativeSolvers", "JLD2", "KernelAbstractions", "LinearAlgebra", "Logging", "MPI", "NCDatasets", "OffsetArrays", "OrderedCollections", "PencilArrays", "PencilFFTs", "Pkg", "Printf", "Random", "Rotations", "SeawaterPolynomials", "SparseArrays", "Statistics", "StructArrays"]

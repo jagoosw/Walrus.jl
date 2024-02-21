@@ -4,7 +4,7 @@ export SimpleInterpolation
 
 export WallStress, WallStressBoundaryConditions
 
-export HomogeneousBodyHeating
+export HomogeneousBodyHeating, PARModelHeating
 
 export Tide, TidalForcing
 

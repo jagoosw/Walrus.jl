@@ -1,4 +1,8 @@
-using Walrus, Oceananigans, Test
+using Walrus, Oceananigans, OceanBioME, Test, CUDA
+
+arch = CPU()
+
+@info "Testing on $arch"
 
 include("test_interpolation.jl")
 include("test_wind_model.jl")
