@@ -10,7 +10,7 @@
         time_step!(model, 1)
     end
 
-    @test all(Array(model.velocities.u) .≈ 0) # no wind no stress
+    @test all(Array(interior(model.velocities.u)) .≈ 0) # no wind no stress
 
     wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 1., reference_wind_direction = 90.)
 
@@ -23,9 +23,9 @@
         time_step!(model, 1)
     end
 
-    @test -1 <= Array(model.velocities.u, 1, 1, 2) < 0.1
+    @test -1 <= Array(interior(model.velocities.u, 1, 1, 2))[1] < 0.1
     @test Array(interior(model.velocities.u, 1, 1, 1))[1] ≈ 0
-    @test all(Array(model.velocities.v) .≈ 0)
+    @test all(Array(interior(model.velocities.v)) .≈ 0)
 
     # precomputed roughness lengths
 
