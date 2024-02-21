@@ -203,5 +203,5 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     analytical_body_heating ./= (body_heating.water_density * body_heating.water_heat_capacity)
 
     # high tollerance, I think error is from course grid (hopefully)
-    @test all(isapprox.(analytical_body_heating, [body_heating(1, 1, k, grid, model.clock, fields(model)) for k = 2:-1:1], atol = 1.5e-6))
+    @test CUDA.@allowscalar all(isapprox.(analytical_body_heating, [body_heating(1, 1, k, grid, model.clock, fields(model)) for k = 2:-1:1], atol = 1.5e-6))
 end
