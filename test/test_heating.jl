@@ -22,7 +22,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     # 1 W/m² for 10s -> 10J, top meter absorbs 10J * (exp(0) - exp(- 1)) ≈ 6.3212 J
     # Density and specific head are 1 so the water should have increased in temp by ~6.3212 K
-    @test model.tracers.T[1, 1, 10] ≈ 10 * (1 - exp(-1))
+    @test Array(interior(model.tracers.T, 1, 1, 10))[1] ≈ 10 * (1 - exp(-1))
 
     # TODO: change this test so it is actually correct when spacing is not 1 in all dimensions
 
@@ -48,7 +48,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     # 1 W heating -> 1 K m / s for 1s with Δz = 1m -> -272.15 K
     time_step!(model, 1)
 
-    @test model.tracers.T[1, 1, 10] ≈ -272.15
+    @test Array(interior(model.tracers.T, 1, 1, 10))[1] ≈ -272.15
 
     #####
     ##### Test sensible flux
@@ -72,7 +72,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     # 1 W heating -> 1 K m / s for 1s with Δz = 1m -> -272.15 K
     time_step!(model, 1)
 
-    @test model.tracers.T[1, 1, 10] ≈ -272.15
+    @test Array(interior(model.tracers.T, 1, 1, 10))[1] ≈ -272.15
 
     #####
     ##### Test sensible heating/cooling - it is not straight forward to come up with an anlaytical result for this
@@ -99,21 +99,21 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     
     time_step!(model, 1)
 
-    @test model.tracers.T[1, 1, 10] ≈ 0
+    @test Array(interior(model.tracers.T, 1, 1, 10))[1] ≈ 0
 
     # when the water is warmer, it looses heat
     set!(model, T = 1)
     
     time_step!(model, 1)
 
-    @test model.tracers.T[1, 1, 10] < 1
+    @test Array(interior(model.tracers.T, 1, 1, 10))[1] < 1
 
     # when the water is colder, it gains heat
     set!(model, T = -1)
     
     time_step!(model, 1)
 
-    @test model.tracers.T[1, 1, 10] > -1
+    @test Array(interior(model.tracers.T, 1, 1, 10))[1] > -1
 
     #####
     ##### Test latent heating/cooling
@@ -139,21 +139,21 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     
     time_step!(model, 1)
 
-    @test model.tracers.T[1, 1, 10] ≈ 0
+    @test Array(interior(model.tracers, 1, 1, 10))[1] ≈ 0
 
     # when the water has higher saturation pressure, it looses heat
     set!(model, T = 1)
     
     time_step!(model, 1)
 
-    @test model.tracers.T[1, 1, 10] < 1
+    @test Array(interior(model.tracers.T, 1, 1, 10))[1] < 1
 
     # when the water has lower saturation pressure, it gains heat
     set!(model, T = -1)
     
     time_step!(model, 1)
 
-    @test model.tracers.T[1, 1, 10] > -1
+    @test Array(interior(model.tracers.T, 1, 1, 10))[1] > -1
 
     #####
     ##### OceanBioME light attenuation body heating
