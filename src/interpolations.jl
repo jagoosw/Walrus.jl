@@ -4,7 +4,7 @@ export SimpleInterpolation
 
 using Adapt: adapt
 
-using Oceananigans.Architectures: arch_array, CPU
+using Oceananigans.Architectures: on_architecture, CPU
 
 import Adapt: adapt_structure
 
@@ -23,7 +23,7 @@ function SimpleInterpolation(range::Array, values; arch = CPU())
 
     Δx = range[2] - range[1]
 
-    return SimpleInterpolation((; x₀, Δx), arch_array(arch, values))
+    return SimpleInterpolation((; x₀, Δx), on_architecture(arch, values))
 end
 
 

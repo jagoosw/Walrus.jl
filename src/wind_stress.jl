@@ -6,7 +6,7 @@ using Roots
 
 using Adapt: adapt
 
-using Oceananigans.Architectures: arch_array, CPU
+using Oceananigans.Architectures: on_architecture, CPU
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.BuoyancyModels: g_Earth
 
