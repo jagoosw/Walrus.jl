@@ -17,7 +17,7 @@ using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.Fields: Center, Face
 using Oceananigans.Grids: znode
 
-using Oceananigans.Architectures: arch_array, CPU, architecture
+using Oceananigans.Architectures: on_architecture, CPU, architecture
 
 using Walrus.Interpolations: SimpleInterpolation
 
