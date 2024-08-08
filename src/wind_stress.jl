@@ -10,7 +10,7 @@ using Oceananigans.Architectures: on_architecture, CPU
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.BuoyancyModels: g_Earth
 
-using Walrus: ReturnValue, display_input
+using Walrus: get_value, normalise_surface_function
 using Walrus.Interpolations: SimpleInterpolation
 
 import Adapt: adapt_structure
@@ -102,9 +102,8 @@ function WindStress(; reference_wind_speed,
                       air_density = 1.225, 
                       water_density = 1026.)
         
-    isa(reference_wind_speed, Function) || (reference_wind_speed = ReturnValue(reference_wind_speed))
-
-    isa(reference_wind_direction, Function) || (reference_wind_direction = ReturnValue(reference_wind_direction))
+    reference_wind_speed = normalise_surface_function(reference_wind_speed)
+    reference_wind_direction = normalise_surface_function(reference_wind_direction)
 
     return WindStress(reference_wind_speed, reference_wind_direction,
                       drag_coefficient, air_density, water_density)
@@ -166,22 +165,28 @@ function WindStressBoundaryConditions(; reference_wind_speed,
                                         air_density = 1.225, 
                                         water_density = 1026.)
 
-    wind_stress = WindStress(; reference_wind_speed, reference_wind_direction,
+    wind_stress = WindStress(; reference_wind_speed, 
+                               reference_wind_direction,
                                drag_coefficient, air_density, water_density)
 
-    u = FluxBoundaryCondition(wind_stress, parameters = Val(:x), field_dependencies = (:u, :v))
+    u = FluxBoundaryCondition(wind_stress, parameters = Val(:x), discrete_form=true)
 
-    v = FluxBoundaryCondition(wind_stress, parameters = Val(:y), field_dependencies = (:u, :v))
+    v = FluxBoundaryCondition(wind_stress, parameters = Val(:y), discrete_form=true)
 
     return (; u, v)
 end
 
-@inline function (wind_stress::WindStress)(x, y, t, u, v, ::Val{:x})
+@inline function (wind_stress::WindStress)(i, j, grid, clock, model_fields, ::Val{:x})
     ρₐ = wind_stress.air_density
     ρₒ = wind_stress.water_density
 
-    wind_speed = wind_stress.reference_wind_speed(x, y, t)
-    wind_direction = wind_stress.reference_wind_direction(x, y, t)
+    t = clock.time
+
+    u = @inbounds model_fields.u[i, j, grid.Nz]
+    v = @inbounds model_fields.v[i, j, grid.Nz]
+
+    wind_speed = get_value(wind_stress.reference_wind_speed, i, j, grid, clock)
+    wind_direction = get_value(wind_stress.reference_wind_direction, i, j, grid, clock)
 
     uʷ = - wind_speed * sind(wind_direction)
     vʷ = - wind_speed * cosd(wind_direction)
@@ -193,12 +198,17 @@ end
     return - stress_velocity * (uʷ - u)
 end
 
-@inline function (wind_stress::WindStress)(x, y, t, u, v, ::Val{:y})
+@inline function (wind_stress::WindStress)(i, j, grid, clock, model_fields, ::Val{:y})
     ρₐ = wind_stress.air_density
     ρₒ = wind_stress.water_density
 
-    wind_speed = wind_stress.reference_wind_speed(x, y, t)
-    wind_direction = wind_stress.reference_wind_direction(x, y, t)
+    t = clock.time
+
+    u = @inbounds model_fields.u[i, j, grid.Nz]
+    v = @inbounds model_fields.v[i, j, grid.Nz]
+
+    wind_speed = get_value(wind_stress.reference_wind_speed, i, j, grid, clock)
+    wind_direction = get_value(wind_stress.reference_wind_direction, i, j, grid, clock)
 
     uʷ = - wind_speed * sind(wind_direction)
     vʷ = - wind_speed * cosd(wind_direction)
@@ -212,8 +222,8 @@ end
 
 summary(::WindStress) = string("Wind stress model")
 show(io::IO, wind::WindStress) = println(io, summary(wind), " with:\n",
-                                     " Wind speed: ", display_input(wind.reference_wind_speed), "\n",
-                                     " Wind direction: ", display_input(wind.reference_wind_direction), "\n",
+                                     " Wind speed: ", summary(wind.reference_wind_speed), "\n",
+                                     " Wind direction: ", summary(wind.reference_wind_direction), "\n",
                                      " Drag coefficient: ", summary(wind.drag_coefficient), "\n",
                                      " Air density: ", wind.air_density, " kg/m³\n",
                                      " Water density: ", wind.water_density, " kg/m³")
@@ -322,7 +332,7 @@ coefficient model.
 This will sometimes fail as the function is not well behaved at either low reference heights
 (it has been tuned for 10m wind), or high (⪆ 20 m/s).
 """
-@inline function find_velocity_roughness_length(dc::LogarithmicNeutralWind{<:Any, Nothing}, wind_speed, reference_height, params)
+@inline function find_velocity_roughness_length(::LogarithmicNeutralWind{<:Any, Nothing}, wind_speed, reference_height, params)
     z₀ = reference_height
     
     upper_bounds_guess = ifelse(wind_speed < 0.05, 0.95 * reference_height, ifelse(wind_speed < 14, 0.5 * reference_height, 0.2 * reference_height))
