@@ -73,7 +73,7 @@ function HomogeneousBodyHeating(; surface_flux,
                                   water_heat_capacity = 3991.0, # J K⁻¹ kg⁻¹
                                   water_density = 1026.0) # kg m⁻³
 
-    isa(surface_flux, Function) || (surface_flux = ReturnValue(surface_flux))
+    surface_flux = normalise_surface_function(surface_flux)
 
     return HomogeneousBodyHeating(water_attenuation_coefficient,
                                   water_heat_capacity,
@@ -86,7 +86,7 @@ end
     cₚ = heating.water_heat_capacity
     α = heating.water_attenuation_coefficient
 
-    x, y, _ = node(i, j, k, grid, Center(), Center(), Center())
+    surface_flux = get_value(heating.surface_flux, i, j, grid, clock)
 
     zᶠ = znode(i, j, k, grid, Center(), Center(), Face())
 
@@ -94,7 +94,7 @@ end
 
     t = clock.time
 
-    return α * heating.surface_flux(x, y, t) * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) / (ρ * cₚ)
+    return α * surface_flux * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) / (ρ * cₚ)
 end
 
 
