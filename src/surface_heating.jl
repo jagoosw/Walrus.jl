@@ -147,7 +147,7 @@ function SurfaceHeatExchange(; wind_stress,
                                air_water_mixing_ratio = 0.001, # kg / kgs
                                stephan_boltzman_constant = 5.670374419e-8) # W / K⁴
             
-    isa(air_temperature, Function) || (air_temperature = ReturnValue(air_temperature))
+    air_temperature = normalise_surface_function(air_temperature)
 
     return SurfaceHeatExchange(wind_stress, air_temperature,
                                latent_heat_vaporisation, vapour_pressure,
