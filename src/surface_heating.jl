@@ -157,16 +157,16 @@ function SurfaceHeatExchange(; wind_stress,
 end
 
 """
-    SurfaceHeatExchange(; wind_stress,
-                          air_temperature = 18, # °C
-                          latent_heat_vaporisation = EmpiricalLatentHeatVaporisation(),
-                          vapour_pressure = AugustRocheMagnusVapourPressure(),
-                          water_specific_heat_capacity = 3991., # J / K / kg
-                          water_density = 1026., # kg / m³
-                          air_specific_heat_capacity = 1003.5, # J / K / kg
-                          air_density = 1.204, # kg
-                          air_water_mixing_ratio = 0.001, # kg / kg
-                          stephan_boltzman_constant = 5.670374419e-8) # W / K⁴
+    SurfaceHeatExchangeBoundaryCondition(; wind_stress,
+                                           air_temperature = 18, # °C
+                                           latent_heat_vaporisation = EmpiricalLatentHeatVaporisation(),
+                                           vapour_pressure = AugustRocheMagnusVapourPressure(),
+                                           water_specific_heat_capacity = 3991., # J / K / kg
+                                           water_density = 1026., #kg / m³
+                                           air_specific_heat_capacity = 1003.5, # J / K / kg
+                                           air_density = 1.204, # kg
+                                           air_water_mixing_ratio = 0.001, # kg / kg
+                                           stephan_boltzman_constant = 5.670374419e-8) # W / K⁴
 
 A convenience constructor returning `SurfaceHeatExchange` as a boundary condition
 
