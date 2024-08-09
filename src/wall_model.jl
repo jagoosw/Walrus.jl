@@ -19,6 +19,7 @@ using Oceananigans.Grids: znode
 
 using Oceananigans.Architectures: on_architecture, CPU, architecture
 
+using Walrus: get_value, normalise_surface_function
 using Walrus.Interpolations: SimpleInterpolation
 
 import Adapt: adapt_structure

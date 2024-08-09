@@ -10,7 +10,7 @@ using Oceananigans.Architectures: on_architecture, CPU
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.BuoyancyModels: g_Earth
 
-using Walrus: ReturnValue, display_input
+using Walrus: get_value, normalise_surface_function
 using Walrus.Interpolations: SimpleInterpolation
 
 import Adapt: adapt_structure
@@ -74,7 +74,7 @@ julia> reference_wind_direction = 0.
 0.0
 
 julia> wind_stress = WindStress(; reference_wind_speed, reference_wind_direction)
-(::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) (generic function with 2 methods)
+(::WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}) (generic function with 2 methods)
 
 julia> boundary_conditions = (u = FieldBoundaryConditions(top = FluxBoundaryCondition(wind_stress, parameters = Val(:x))),
                               v = FieldBoundaryConditions(top = FluxBoundaryCondition(wind_stress, parameters = Val(:y))))
@@ -84,14 +84,14 @@ julia> boundary_conditions = (u = FieldBoundaryConditions(top = FluxBoundaryCond
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── bottom: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing)
+├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing)
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing), v = Oceananigans.FieldBoundaryConditions, with boundary conditions
 ├── west: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── bottom: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing)
+├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing)
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing))
 
 ```
@@ -102,9 +102,8 @@ function WindStress(; reference_wind_speed,
                       air_density = 1.225, 
                       water_density = 1026.)
         
-    isa(reference_wind_speed, Function) || (reference_wind_speed = ReturnValue(reference_wind_speed))
-
-    isa(reference_wind_direction, Function) || (reference_wind_direction = ReturnValue(reference_wind_direction))
+    reference_wind_speed = normalise_surface_function(reference_wind_speed)
+    reference_wind_direction = normalise_surface_function(reference_wind_direction)
 
     return WindStress(reference_wind_speed, reference_wind_direction,
                       drag_coefficient, air_density, water_density)
@@ -138,7 +137,7 @@ julia> using Walrus: WindStressBoundaryConditions
 julia> using Oceananigans
 
 julia> wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 0.1, reference_wind_direction = 90.)
-(u = FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing), v = FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing))
+(u = FluxBoundaryCondition: DiscreteBoundaryFunction (::WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}) with parameters Val{:x}, v = FluxBoundaryCondition: DiscreteBoundaryFunction (::WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}) with parameters Val{:y})
 
 julia> boundary_conditions = (u = FieldBoundaryConditions(top = wind_stress_boundary_conditions.u),
                               v = FieldBoundaryConditions(top = wind_stress_boundary_conditions.v))
@@ -148,14 +147,14 @@ julia> boundary_conditions = (u = FieldBoundaryConditions(top = wind_stress_boun
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── bottom: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing)
+├── top: FluxBoundaryCondition: DiscreteBoundaryFunction (::WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}) with parameters Val{:x}
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing), v = Oceananigans.FieldBoundaryConditions, with boundary conditions
 ├── west: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── bottom: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) at (Nothing, Nothing, Nothing)
+├── top: FluxBoundaryCondition: DiscreteBoundaryFunction (::WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}) with parameters Val{:y}
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing))
 
 ```
@@ -166,22 +165,28 @@ function WindStressBoundaryConditions(; reference_wind_speed,
                                         air_density = 1.225, 
                                         water_density = 1026.)
 
-    wind_stress = WindStress(; reference_wind_speed, reference_wind_direction,
+    wind_stress = WindStress(; reference_wind_speed, 
+                               reference_wind_direction,
                                drag_coefficient, air_density, water_density)
 
-    u = FluxBoundaryCondition(wind_stress, parameters = Val(:x), field_dependencies = (:u, :v))
+    u = FluxBoundaryCondition(wind_stress, parameters = Val(:x), discrete_form=true)
 
-    v = FluxBoundaryCondition(wind_stress, parameters = Val(:y), field_dependencies = (:u, :v))
+    v = FluxBoundaryCondition(wind_stress, parameters = Val(:y), discrete_form=true)
 
     return (; u, v)
 end
 
-@inline function (wind_stress::WindStress)(x, y, t, u, v, ::Val{:x})
+@inline function (wind_stress::WindStress)(i, j, grid, clock, model_fields, ::Val{:x})
     ρₐ = wind_stress.air_density
     ρₒ = wind_stress.water_density
 
-    wind_speed = wind_stress.reference_wind_speed(x, y, t)
-    wind_direction = wind_stress.reference_wind_direction(x, y, t)
+    t = clock.time
+
+    u = @inbounds model_fields.u[i, j, grid.Nz]
+    v = @inbounds model_fields.v[i, j, grid.Nz]
+
+    wind_speed = get_value(wind_stress.reference_wind_speed, i, j, grid, clock)
+    wind_direction = get_value(wind_stress.reference_wind_direction, i, j, grid, clock)
 
     uʷ = - wind_speed * sind(wind_direction)
     vʷ = - wind_speed * cosd(wind_direction)
@@ -193,12 +198,17 @@ end
     return - stress_velocity * (uʷ - u)
 end
 
-@inline function (wind_stress::WindStress)(x, y, t, u, v, ::Val{:y})
+@inline function (wind_stress::WindStress)(i, j, grid, clock, model_fields, ::Val{:y})
     ρₐ = wind_stress.air_density
     ρₒ = wind_stress.water_density
 
-    wind_speed = wind_stress.reference_wind_speed(x, y, t)
-    wind_direction = wind_stress.reference_wind_direction(x, y, t)
+    t = clock.time
+
+    u = @inbounds model_fields.u[i, j, grid.Nz]
+    v = @inbounds model_fields.v[i, j, grid.Nz]
+
+    wind_speed = get_value(wind_stress.reference_wind_speed, i, j, grid, clock)
+    wind_direction = get_value(wind_stress.reference_wind_direction, i, j, grid, clock)
 
     uʷ = - wind_speed * sind(wind_direction)
     vʷ = - wind_speed * cosd(wind_direction)
@@ -212,8 +222,8 @@ end
 
 summary(::WindStress) = string("Wind stress model")
 show(io::IO, wind::WindStress) = println(io, summary(wind), " with:\n",
-                                     " Wind speed: ", display_input(wind.reference_wind_speed), "\n",
-                                     " Wind direction: ", display_input(wind.reference_wind_direction), "\n",
+                                     " Wind speed: ", summary(wind.reference_wind_speed), "\n",
+                                     " Wind direction: ", summary(wind.reference_wind_direction), "\n",
                                      " Drag coefficient: ", summary(wind.drag_coefficient), "\n",
                                      " Air density: ", wind.air_density, " kg/m³\n",
                                      " Water density: ", wind.water_density, " kg/m³")
@@ -322,7 +332,7 @@ coefficient model.
 This will sometimes fail as the function is not well behaved at either low reference heights
 (it has been tuned for 10m wind), or high (⪆ 20 m/s).
 """
-@inline function find_velocity_roughness_length(dc::LogarithmicNeutralWind{<:Any, Nothing}, wind_speed, reference_height, params)
+@inline function find_velocity_roughness_length(::LogarithmicNeutralWind{<:Any, Nothing}, wind_speed, reference_height, params)
     z₀ = reference_height
     
     upper_bounds_guess = ifelse(wind_speed < 0.05, 0.95 * reference_height, ifelse(wind_speed < 14, 0.5 * reference_height, 0.2 * reference_height))

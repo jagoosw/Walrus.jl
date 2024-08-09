@@ -8,7 +8,6 @@ module RadiativeTransfer
 export HomogeneousBodyHeating, PARModelHeating
 
 using KernelAbstractions
-using Walrus: ReturnValue
 
 using Adapt: adapt
 using Oceananigans.Architectures: architecture
@@ -19,6 +18,8 @@ using Oceananigans.Grids: node, znode, Center, Face
 using Oceananigans.Utils: launch!
 
 using KernelAbstractions.Extras: @unroll
+
+using Walrus: normalise_surface_function
 
 import Oceananigans.Biogeochemistry: update_biogeochemical_state!, update_tendencies!, AbstractBiogeochemistry
 

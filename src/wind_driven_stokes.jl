@@ -40,6 +40,7 @@ using Oceananigans.Architectures: on_architecture, CPU, architecture
 using Oceananigans.BuoyancyModels: g_Earth
 using Oceananigans.StokesDrifts: UniformStokesDrift
 
+using Walrus: get_value
 using Walrus.Interpolations: SimpleInterpolation
 
 import Adapt: adapt_structure
@@ -107,7 +108,7 @@ end
 @inline function surface_drift_velocity(z, t, params)
     wind = params.wind
 
-    uʷ = abs(wind.reference_wind_speed(0, 0, t))
+    uʷ = abs(get_value(wind.reference_wind_speed, nothing, nothing, nothing, t))
 
     dc = wind.drag_coefficient
 

@@ -8,7 +8,7 @@ using Adapt: adapt
 
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 
-using Walrus: ReturnValue, display_input
+using Walrus: get_value, normalise_surface_function
 using Walrus.WindStressModel: WindStress, 
                               LogarithmicNeutralWind, 
                               find_velocity_roughness_length
@@ -119,10 +119,10 @@ julia> using Walrus
 julia> using Oceananigans
 
 julia> wind_stress = WindStress(; reference_wind_speed = 0., reference_wind_direction = 90.)
-(::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) (generic function with 2 methods)
+(::WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}) (generic function with 2 methods)
 
 julia> surface_heat_exchange = SurfaceHeatExchange(; wind_stress)
-(::SurfaceHeatExchange{WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}, Walrus.ReturnValue{Int64}, Walrus.SurfaceHeatingModel.EmpiricalLatentHeatVaporisation{Float64}, Walrus.SurfaceHeatingModel.AugustRocheMagnusVapourPressure{Float64}, Float64}) (generic function with 1 method)
+(::SurfaceHeatExchange{WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}, Int64, Walrus.SurfaceHeatingModel.EmpiricalLatentHeatVaporisation{Float64}, Walrus.SurfaceHeatingModel.AugustRocheMagnusVapourPressure{Float64}, Float64}) (generic function with 1 method)
 
 julia> boundary_conditions = (; T = FieldBoundaryConditions(top = FluxBoundaryCondition(surface_heat_exchange, field_dependencies = (:T, :u, :v))))
 (T = Oceananigans.FieldBoundaryConditions, with boundary conditions
@@ -131,7 +131,7 @@ julia> boundary_conditions = (; T = FieldBoundaryConditions(top = FluxBoundaryCo
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── bottom: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::SurfaceHeatExchange{WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}, Walrus.ReturnValue{Int64}, Walrus.SurfaceHeatingModel.EmpiricalLatentHeatVaporisation{Float64}, Walrus.SurfaceHeatingModel.AugustRocheMagnusVapourPressure{Float64}, Float64}) at (Nothing, Nothing, Nothing)
+├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::SurfaceHeatExchange{WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}, Int64, Walrus.SurfaceHeatingModel.EmpiricalLatentHeatVaporisation{Float64}, Walrus.SurfaceHeatingModel.AugustRocheMagnusVapourPressure{Float64}, Float64}) at (Nothing, Nothing, Nothing)
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing),)
 
 ```
@@ -147,7 +147,7 @@ function SurfaceHeatExchange(; wind_stress,
                                air_water_mixing_ratio = 0.001, # kg / kgs
                                stephan_boltzman_constant = 5.670374419e-8) # W / K⁴
             
-    isa(air_temperature, Function) || (air_temperature = ReturnValue(air_temperature))
+    air_temperature = normalise_surface_function(air_temperature)
 
     return SurfaceHeatExchange(wind_stress, air_temperature,
                                latent_heat_vaporisation, vapour_pressure,
@@ -190,10 +190,10 @@ Example
 julia> using Walrus
 
 julia> wind_stress = WindStress(; reference_wind_speed = 0., reference_wind_direction = 90.)
-(::WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}) (generic function with 2 methods)
+(::WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}) (generic function with 2 methods)
 
 julia> surface_heat_exchange = SurfaceHeatExchangeBoundaryCondition(; wind_stress)
-FluxBoundaryCondition: ContinuousBoundaryFunction (::SurfaceHeatExchange{WindStress{Walrus.ReturnValue{Float64}, Walrus.ReturnValue{Float64}, LogarithmicNeutralWind{Float64, Nothing}, Float64}, Walrus.ReturnValue{Int64}, Walrus.SurfaceHeatingModel.EmpiricalLatentHeatVaporisation{Float64}, Walrus.SurfaceHeatingModel.AugustRocheMagnusVapourPressure{Float64}, Float64}) at (Nothing, Nothing, Nothing)
+FluxBoundaryCondition: DiscreteBoundaryFunction with (::SurfaceHeatExchange{WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}, Int64, Walrus.SurfaceHeatingModel.EmpiricalLatentHeatVaporisation{Float64}, Walrus.SurfaceHeatingModel.AugustRocheMagnusVapourPressure{Float64}, Float64})
 
 ```
 """
@@ -208,7 +208,7 @@ function SurfaceHeatExchangeBoundaryCondition(; wind_stress,
                                                 air_water_mixing_ratio = 0.001, # kg / kg
                                                 stephan_boltzman_constant = 5.670374419e-8) # W / K⁴
             
-    isa(air_temperature, Function) || (air_temperature = ReturnValue(air_temperature))
+    air_temperature = normalise_surface_function(air_temperature)
 
     surface_heat_exchange =  SurfaceHeatExchange(wind_stress, air_temperature,
                                                  latent_heat_vaporisation, vapour_pressure,
@@ -216,7 +216,7 @@ function SurfaceHeatExchangeBoundaryCondition(; wind_stress,
                                                  air_specific_heat_capacity, air_density, air_water_mixing_ratio,
                                                  stephan_boltzman_constant)
 
-    return FluxBoundaryCondition(surface_heat_exchange, field_dependencies = (:T, :u, :v))
+    return FluxBoundaryCondition(surface_heat_exchange, discrete_form=true)
 end
 
 @inline function Cʰ(drag_coefficient::LogarithmicNeutralWind, wind_speed)
@@ -268,7 +268,7 @@ end
 ##### Cʰ parameterisations
 #####
 
-@inline function (interface::SurfaceHeatExchange)(x, y, t, T, u, v)
+@inline function (interface::SurfaceHeatExchange)(i, j, grid, clock, model_fields)
     σ   = interface.stephan_boltzman_constant
     ρᵃ  = interface.air_density
     cₚᵃ = interface.air_specific_heat_capacity
@@ -277,10 +277,16 @@ end
     ρʷ  = interface.water_density
     cₚʷ = interface.water_specific_heat_capacity
 
-    air_temperature = interface.air_temperature(x, y, t)
+    t = clock.time
 
-    wind_speed = interface.wind_stress.reference_wind_speed(x, y, t)
-    wind_direction = interface.wind_stress.reference_wind_direction(x, y, t)
+    u = @inbounds model_fields.u[i, j, grid.Nz]
+    v = @inbounds model_fields.v[i, j, grid.Nz]
+    T = @inbounds model_fields.T[i, j, grid.Nz]
+
+    air_temperature = get_value(interface.air_temperature, i, j, grid, clock)
+
+    wind_speed = get_value(interface.wind_stress.reference_wind_speed, i, j, grid, clock)
+    wind_direction = get_value(interface.wind_stress.reference_wind_direction, i, j, grid, clock)
 
     uʷ = - wind_speed * sind(wind_direction)
     vʷ = - wind_speed * cosd(wind_direction)
