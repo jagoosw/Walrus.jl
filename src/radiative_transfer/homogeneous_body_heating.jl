@@ -92,8 +92,6 @@ end
 
     zᶠ⁺ = znode(i, j, k + 1, grid, Center(), Center(), Face())
 
-    t = clock.time
-
     return α * surface_flux * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) / (ρ * cₚ)
 end
 

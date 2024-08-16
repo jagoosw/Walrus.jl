@@ -277,8 +277,6 @@ end
     ρʷ  = interface.water_density
     cₚʷ = interface.water_specific_heat_capacity
 
-    t = clock.time
-
     u = @inbounds model_fields.u[i, j, grid.Nz]
     v = @inbounds model_fields.v[i, j, grid.Nz]
     T = @inbounds model_fields.T[i, j, grid.Nz]
