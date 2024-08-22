@@ -31,33 +31,38 @@ function SimpleInterpolation(range::Array, values; arch = CPU(), mode = Cyclic()
     return SimpleInterpolation((; x₀, x₁, Δx), on_architecture(arch, values), mode)
 end
 
-@inline function (::Linear)(x, x₀, x₁, Δx, N)
+@inline function (::Linear)(x, x₀, Δx, N)
     n₀ = floor(Int, (x - x₀) / Δx)
 
-    return n₀ + 1, n₀ + 2
+    return x, n₀ + 1, n₀ + 2
 end
 
-@inline function (::Cyclic)(x, x₀, x₁, Δx, N)
-    x = mod(x - x₀, x₁ - x₀ + Δx) + x₀
-
+@inline function (::Cyclic)(x, x₀, Δx, N)
     n₀ = floor(Int, (x - x₀) / Δx)
 
-    n₁, n₂ = n₀ + 1, n₀ + 2
+    n₁ = mod(n₀ + 1, N)
 
-    n₁, n₂ = ifelse(x > x₁, (N, 1), (n₁, n₂))
+    n₂ = ifelse(n₁ == N, 1, n₁ + 1)
 
-    return n₁, n₂
+    x = x₀ + Δx * (n₁ - 1)
+
+    return x, n₁, n₂
 end
 
 function (itp::SimpleInterpolation)(x)
-    n₁, n₂ = itp.mode(x, itp.range.x₀, itp.range.x₁, itp.range.Δx, length(itp.values))
+    x₀ = itp.range.x₀
+    x₁ = itp.range.x₁
+    Δx = itp.range.Δx
+    N  = length(itp.values)
 
-    x₁ = itp.range.x₀ + itp.range.Δx * n₁
+    x, n₁, n₂ = itp.mode(x, x₀, Δx, N)
+
+    x₁ = x₀ + Δx * (n₁ - 1)
 
     y₁ = @inbounds itp.values[n₁]
     y₂ = @inbounds itp.values[n₂]
 
-    return y₁ + (x - x₁) * (y₂ - y₁) / itp.range.Δx
+    return y₁ + (x - x₁) * (y₂ - y₁) / Δx
 end
 
 end # module
