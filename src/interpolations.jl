@@ -44,7 +44,7 @@ end
 
     n₂ = ifelse(n₁ == N, 1, n₁ + 1)
 
-    x = x₀ + Δx * (n₁ - 1)
+    x = mod(x - x₀, N * Δx) + x₀
 
     return x, n₁, n₂
 end
