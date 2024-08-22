@@ -11,7 +11,7 @@ using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.BuoyancyModels: g_Earth
 
 using Walrus: get_value, normalise_surface_function
-using Walrus.Interpolations: SimpleInterpolation
+using Walrus.Interpolations: SimpleInterpolation, Linear
 
 import Adapt: adapt_structure
 import Base: summary, show
@@ -304,7 +304,7 @@ function LogarithmicNeutralWind(; monin_obukhov_stability_length::FT = 0.4,
             lengths[n] = find_velocity_roughness_length(tmp, wind_speed, 10, params)
         end
 
-        roughness_length = SimpleInterpolation(precompute_wind_speeds, lengths; arch)
+        roughness_length = SimpleInterpolation(precompute_wind_speeds, lengths; arch, mode = Linear())
     else
         roughness_length = nothing
     end

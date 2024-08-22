@@ -20,7 +20,7 @@ using Oceananigans.Grids: znode
 using Oceananigans.Architectures: on_architecture, CPU, architecture
 
 using Walrus: get_value, normalise_surface_function
-using Walrus.Interpolations: SimpleInterpolation
+using Walrus.Interpolations: SimpleInterpolation, Linear
 
 import Adapt: adapt_structure
 import Base: summary, show
@@ -118,7 +118,7 @@ function WallStress(; von_Karman_constant::FT = 0.4,
             velocities[n] = find_friction_velocity(tmp, speed, params)
         end
 
-        friction_velocities = SimpleInterpolation(precompute_speeds, velocities; arch)
+        friction_velocities = SimpleInterpolation(precompute_speeds, velocities; arch, mode = Linear())
     else
         friction_velocities = nothing
     end
