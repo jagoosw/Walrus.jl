@@ -50,11 +50,9 @@ end
 end
 
 function (itp::SimpleInterpolation)(x)
-    x = itp.mode(x, itp.range.x₀, itp.range.x₁)
+    n₁, n₂ = itp.mode(x, itp.range.x₀, itp.range.x₁, itp.range.Δx, length(itp.values))
 
-    n₁, n₂ = floor(Int, (x - itp.range.x₀) / itp.range.Δx)
-
-    x₁ = itp.range.x₀ + itp.range.Δx * (n₁ - 1)
+    x₁ = itp.range.x₀ + itp.range.Δx * n₁
 
     y₁ = @inbounds itp.values[n₁]
     y₂ = @inbounds itp.values[n₂]
