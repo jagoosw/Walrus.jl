@@ -1,3 +1,5 @@
+using Walrus.Interpolations: Linear
+
 @testset "Interpolaiton" begin
     x = [0:10^-6:2π;]
     y = cos.(x)
