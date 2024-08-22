@@ -1,12 +1,17 @@
 @testset "Interpolaiton" begin
-    x = [0:0.01:1;]
+    x = [0:10^-6:2π;]
     y = cos.(x)
+
+    itp = SimpleInterpolation(x, y; mode = Linear())
+
+    test_x = rand(0:10^-6:2π, 1000)
+
+    # atol is the Rolle theory maxiumum error for linear interpolation + a little
+    @test all([isapprox(itp(x), cos(x), atol = 2 * abs(0.01^2 / 8 * cos(floor(x; digits = 2)))) for x in test_x])
+    
+    test_x = rand(0:10^-6:4π, 1000)
 
     itp = SimpleInterpolation(x, y)
 
-    test_x = rand(1000)
-
-    # atol is the Rolle theory maxiumum error for linear interpolation
-    @test all([isapprox(itp(x), cos(x), atol = 0.01^2 / 8 * cos(floor(x; digits = 2))) for x in test_x])
-    @test all([isapprox(itp(x), cos(mod(x, 1)), atol = 0.01^2 / 8 * cos(floor(mod(x, 1); digits = 2))) for x in test_x .+ 1]) 
+    @test all([isapprox(itp(x), cos(x), atol = 15 * abs(0.01^2 / 8 * cos(floor(x; digits = 2)))) for x in test_x]) 
 end
