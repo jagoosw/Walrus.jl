@@ -31,21 +31,35 @@ function SimpleInterpolation(range::Array, values; arch = CPU(), mode = Cyclic()
     return SimpleInterpolation((; x₀, x₁, Δx), on_architecture(arch, values), mode)
 end
 
-@inline (::Linear)(x, x₀, x₁) = x
-@inline (::Cyclic)(x, x₀, x₁) = mod(x - x₀, x₁ - x₀) + x₀
+@inline function (::Linear)(x, x₀, x₁, Δx, N)
+    n₀ = floor(Int, (x - x₀) / Δx)
+
+    return n₀ + 1, n₀ + 2
+end
+
+@inline function (::Cyclic)(x, x₀, x₁, Δx, N)
+    x = mod(x - x₀, x₁ - x₀ + Δx) + x₀
+
+    n₀ = floor(Int, (x - x₀) / Δx)
+
+    n₁, n₂ = n₀ + 1, n₀ + 2
+
+    n₁, n₂ = ifelse(x > x₁, (N, 1), (n₁, n₂))
+
+    return n₁, n₂
+end
 
 function (itp::SimpleInterpolation)(x)
     x = itp.mode(x, itp.range.x₀, itp.range.x₁)
 
-    n₁ = floor(Int, (x - itp.range.x₀) / itp.range.Δx)
+    n₁, n₂ = floor(Int, (x - itp.range.x₀) / itp.range.Δx)
 
-    x₁ = itp.range.x₀ + itp.range.Δx * n₁
-    x₂ = x₁ + itp.range.Δx
+    x₁ = itp.range.x₀ + itp.range.Δx * (n₁ - 1)
 
-    y₁ = @inbounds itp.values[n₁ + 1]
-    y₂ = @inbounds itp.values[n₁ + 2]
+    y₁ = @inbounds itp.values[n₁]
+    y₂ = @inbounds itp.values[n₂]
 
-    return y₁ + (x - x₁) * (y₂ - y₁) / (x₂ - x₁)
+    return y₁ + (x - x₁) * (y₂ - y₁) / itp.range.Δx
 end
 
 end # module
