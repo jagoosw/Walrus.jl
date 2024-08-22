@@ -40,7 +40,7 @@ end
 @inline function (::Cyclic)(x, x₀, Δx, N)
     n₀ = floor(Int, (x - x₀) / Δx)
 
-    n₁ = mod(n₀ + 1, N)
+    n₁ = mod(n₀, N - 1) + 1
 
     n₂ = ifelse(n₁ == N, 1, n₁ + 1)
 
