@@ -47,7 +47,7 @@ function SimpleInterpolation(coordinates::Tuple, values; arch = CPU(), boundary_
     return SimpleInterpolation(ranges, on_architecture(arch, values), boundary_condition)
 end
 
-(itp::SimpleInterpolation)(X...) = linear_interpolation(X..., itp.values, itp.range, itp.boundary_condition)
+(itp::SimpleInterpolation)(X...) = itp(X..., itp.values, itp.range, itp.boundary_condition)
 
 struct Limited end
 struct Cyclic end
