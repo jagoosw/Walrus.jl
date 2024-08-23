@@ -239,7 +239,7 @@ end
     Rᵣ = ū * z₀ / params.ν
     zₒₜ = min(1.15e-4, 5.5e-5 * Rᵣ ^ -0.6)
 
-    result = params.κ ^ 2 / (log(10/z₀) * log(10/zₒₜ)) # hmm this might be meant to be 2
+    result = params.κ ^ 2 / (log(2/z₀) * log(2/zₒₜ))
 
     result = ifelse(isfinite(result), result, 0)# this should only occur if wind speed is zero in which case stress is zero anyway
 
