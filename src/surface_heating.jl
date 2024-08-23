@@ -157,16 +157,16 @@ function SurfaceHeatExchange(; wind_stress,
 end
 
 """
-    SurfaceHeatExchange(; wind_stress,
-                          air_temperature = 18, # °C
-                          latent_heat_vaporisation = EmpiricalLatentHeatVaporisation(),
-                          vapour_pressure = AugustRocheMagnusVapourPressure(),
-                          water_specific_heat_capacity = 3991., # J / K / kg
-                          water_density = 1026., # kg / m³
-                          air_specific_heat_capacity = 1003.5, # J / K / kg
-                          air_density = 1.204, # kg
-                          air_water_mixing_ratio = 0.001, # kg / kg
-                          stephan_boltzman_constant = 5.670374419e-8) # W / K⁴
+    SurfaceHeatExchangeBoundaryCondition(; wind_stress,
+                                           air_temperature = 18, # °C
+                                           latent_heat_vaporisation = EmpiricalLatentHeatVaporisation(),
+                                           vapour_pressure = AugustRocheMagnusVapourPressure(),
+                                           water_specific_heat_capacity = 3991., # J / K / kg
+                                           water_density = 1026., #kg / m³
+                                           air_specific_heat_capacity = 1003.5, # J / K / kg
+                                           air_density = 1.204, # kg
+                                           air_water_mixing_ratio = 0.001, # kg / kg
+                                           stephan_boltzman_constant = 5.670374419e-8) # W / K⁴
 
 A convenience constructor returning `SurfaceHeatExchange` as a boundary condition
 
@@ -181,7 +181,7 @@ Keyword Arguments
 - `air_specific_heat_capacit`: the specific heat capacity of air in J / K / kg
 - `air_density`: air density in kg / m³
 - `air_water_mixing_ratio`: water content of air in kg / kg
-- `stephan_boltzman_constant`: the Stephan-Boltzman constant in W / K⁴
+- `stephan_boltzman_constant`: the Stephan-Boltzman constant in W / m² / K⁴
 
 Example
 =======
@@ -232,16 +232,16 @@ end
 
     z₀ = find_velocity_roughness_length(drag_coefficient, wind_speed, 10, params)
 
-    ū = κ * wind_speed / log(10 / z₀)
+    ū = κ * wind_speed / log(2/z₀)
 
-    isfinite(ū) || (ū = 0)
+    ū = ifelse(isfinite(ū), ū, 0)
 
     Rᵣ = ū * z₀ / params.ν
     zₒₜ = min(1.15e-4, 5.5e-5 * Rᵣ ^ -0.6)
 
-    result = params.κ ^ 2 / (log(10/z₀) * log(10/zₒₜ)) # hmm this might be meant to be 2
+    result = params.κ ^ 2 / (log(2/z₀) * log(2/zₒₜ))
 
-    isfinite(result) || (result = 0) # this should only occur if wind speed is zero in which case stress is zero anyway
+    result = ifelse(isfinite(result), result, 0)# this should only occur if wind speed is zero in which case stress is zero anyway
 
     return result
 end
@@ -277,8 +277,6 @@ end
     ρʷ  = interface.water_density
     cₚʷ = interface.water_specific_heat_capacity
 
-    t = clock.time
-
     u = @inbounds model_fields.u[i, j, grid.Nz]
     v = @inbounds model_fields.v[i, j, grid.Nz]
     T = @inbounds model_fields.T[i, j, grid.Nz]
@@ -291,7 +289,7 @@ end
     uʷ = - wind_speed * sind(wind_direction)
     vʷ = - wind_speed * cosd(wind_direction)
 
-    relative_speed = √((uʷ - u)^2 + (vʷ - v)^2)
+    relative_speed = wind_speed#√((uʷ - u)^2 + (vʷ - v)^2)
 
     cʰ = Cʰ(interface.wind_stress.drag_coefficient, relative_speed)
     

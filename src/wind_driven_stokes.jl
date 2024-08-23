@@ -41,7 +41,7 @@ using Oceananigans.BuoyancyModels: g_Earth
 using Oceananigans.StokesDrifts: UniformStokesDrift
 
 using Walrus: get_value
-using Walrus.Interpolations: SimpleInterpolation
+using Walrus.Interpolations: SimpleInterpolation, Limited
 
 import Adapt: adapt_structure
 import Base: summary, show
@@ -72,7 +72,7 @@ function WindDrivenStokesDrift(; wind, depth,
             precomputed_k[n] = find_zero(wavenumber, (0, 8 * ωₚ ^ 2 / g), Bisection(), p = (; g, ωₚ, h))
         end
 
-        precomputed_wavenumbers = SimpleInterpolation(precomputed_peak_frequencies, precomputed_k; arch)
+        precomputed_wavenumbers = SimpleInterpolation(precomputed_peak_frequencies, precomputed_k; arch, boundary_condition = Limited())
     end
 
     return WindDrivenStokesDrift(direction, wind, depth, precomputed_wavenumbers, gravitational_acceleration, time_interpolation_window)
