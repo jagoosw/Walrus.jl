@@ -118,7 +118,7 @@ function WallStress(; von_Karman_constant::FT = 0.4,
             velocities[n] = find_friction_velocity(tmp, speed, params)
         end
 
-        friction_velocities = SimpleInterpolation(precompute_speeds, velocities; arch, mode = Limited())
+        friction_velocities = SimpleInterpolation(precompute_speeds, velocities; arch, boundary_condition = Limited())
     else
         friction_velocities = nothing
     end
