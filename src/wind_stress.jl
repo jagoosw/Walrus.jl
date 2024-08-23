@@ -11,7 +11,7 @@ using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 using Oceananigans.BuoyancyModels: g_Earth
 
 using Walrus: get_value, normalise_surface_function
-using Walrus.Interpolations: SimpleInterpolation, Linear
+using Walrus.Interpolations: SimpleInterpolation, Limited
 
 import Adapt: adapt_structure
 import Base: summary, show
@@ -304,7 +304,7 @@ function LogarithmicNeutralWind(; monin_obukhov_stability_length::FT = 0.4,
             lengths[n] = find_velocity_roughness_length(tmp, wind_speed, 10, params)
         end
 
-        roughness_length = SimpleInterpolation(precompute_wind_speeds, lengths; arch, mode = Linear())
+        roughness_length = SimpleInterpolation(precompute_wind_speeds, lengths; arch, mode = Limited())
     else
         roughness_length = nothing
     end
@@ -337,6 +337,7 @@ This will sometimes fail as the function is not well behaved at either low refer
     
     upper_bounds_guess = ifelse(wind_speed < 0.05, 0.95 * reference_height, ifelse(wind_speed < 14, 0.5 * reference_height, 0.2 * reference_height))
 
+    # do we want to tolarate this branch? Does it make it faster in the normal case?
     wind_speed < 0.01 || (z₀ = find_zero(velocity_roughness_length_roots, (0.00001, upper_bounds_guess), Bisection(), p = merge(params, (; wind_speed, reference_height))))
 
     return z₀
@@ -357,7 +358,7 @@ end
 
     Cᵈ = (params.κ / log(10 / z₀)) ^ 2
 
-    isfinite(Cᵈ) || (Cᵈ = 0) # occurs when z₀ -> reference_height
+    Cᵈ = ifelse(isfinite(Cᵈ), Cᵈ, 0) # occurs when z₀ -> reference_height
     
     return Cᵈ
 end
