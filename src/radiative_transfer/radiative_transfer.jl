@@ -19,7 +19,7 @@ using Oceananigans.Utils: launch!
 
 using KernelAbstractions.Extras: @unroll
 
-using Walrus: normalise_surface_function
+using Walrus: normalise_surface_function, get_value
 
 import Oceananigans.Biogeochemistry: update_biogeochemical_state!, update_tendencies!, AbstractBiogeochemistry
 
