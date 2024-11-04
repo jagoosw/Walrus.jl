@@ -20,7 +20,7 @@ using Oceananigans.Grids: znode
 using Oceananigans.Architectures: on_architecture, CPU, architecture
 
 using Walrus: get_value, normalise_surface_function
-using Walrus.Interpolations: SimpleInterpolation
+using Walrus.Interpolations: SimpleInterpolation, Limited
 
 import Adapt: adapt_structure
 import Base: summary, show
@@ -118,7 +118,7 @@ function WallStress(; von_Karman_constant::FT = 0.4,
             velocities[n] = find_friction_velocity(tmp, speed, params)
         end
 
-        friction_velocities = SimpleInterpolation(precompute_speeds, velocities; arch)
+        friction_velocities = SimpleInterpolation(precompute_speeds, velocities; arch, boundary_condition = Limited())
     else
         friction_velocities = nothing
     end
@@ -131,6 +131,7 @@ end
 @inline function find_friction_velocity(::WallStress{<:Any, Nothing}, U₁, params)
     uₜ = 0
     
+    # do we want this branching operation? It is basically never going to be the case that U₁ == 0 ?
     U₁ == 0 || (uₜ = find_zero(stress_velocity, (0., Inf), Bisection(); p = merge(params, (; U₁)), maxiters = 10^5))
 
     return uₜ
