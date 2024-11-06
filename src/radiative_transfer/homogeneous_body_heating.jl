@@ -55,7 +55,7 @@ julia> grid = RectilinearGrid(size = (128, 128, 128), extent = (1000, 1000, 1000
 ├── Periodic y ∈ [0.0, 1000.0)  regularly spaced with Δy=7.8125
 └── Bounded  z ∈ [-1000.0, 0.0] regularly spaced with Δz=7.8125
 julia> body_heating = HomogeneousBodyHeating(; surface_flux = (x, y, t) -> 100)
-(::HomogeneousBodyHeating{Float64, var"#1#2"}) (generic function with 1 method)
+(::HomogeneousBodyHeating{Float64, Walrus.ContinuousSurfaceFunction{var"#1#2"}}) (generic function with 1 method)
 
 julia> model = NonhydrostaticModel(; grid, forcing = (; T = Forcing(body_heating, discrete_form=true)), tracers = :T)
 NonhydrostaticModel{CPU, RectilinearGrid}(time = 0 seconds, iteration = 0)
