@@ -55,7 +55,7 @@ julia> grid = RectilinearGrid(size = (128, 128, 128), extent = (1000, 1000, 1000
 ├── Periodic y ∈ [0.0, 1000.0)  regularly spaced with Δy=7.8125
 └── Bounded  z ∈ [-1000.0, 0.0] regularly spaced with Δz=7.8125
 julia> body_heating = HomogeneousBodyHeating(; surface_flux = (x, y, t) -> 100)
-(::HomogeneousBodyHeating{Float64, var"#1#2"}) (generic function with 1 method)
+(::HomogeneousBodyHeating{Float64, Walrus.ContinuousSurfaceFunction{var"#1#2"}}) (generic function with 1 method)
 
 julia> model = NonhydrostaticModel(; grid, forcing = (; T = Forcing(body_heating, discrete_form=true)), tracers = :T)
 NonhydrostaticModel{CPU, RectilinearGrid}(time = 0 seconds, iteration = 0)
@@ -73,7 +73,7 @@ function HomogeneousBodyHeating(; surface_flux,
                                   water_heat_capacity = 3991.0, # J K⁻¹ kg⁻¹
                                   water_density = 1026.0) # kg m⁻³
 
-    isa(surface_flux, Function) || (surface_flux = ReturnValue(surface_flux))
+    surface_flux = normalise_surface_function(surface_flux)
 
     return HomogeneousBodyHeating(water_attenuation_coefficient,
                                   water_heat_capacity,
@@ -92,9 +92,7 @@ end
 
     zᶠ⁺ = znode(i, j, k + 1, grid, Center(), Center(), Face())
 
-    t = clock.time
-
-    return α * heating.surface_flux(x, y, t) * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) / (ρ * cₚ)
+    return α * get_value(heating.surface_flux, i, j, grid, clock) * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) / (ρ * cₚ) / (zᶠ⁺ - zᶠ)
 end
 
 
@@ -102,4 +100,3 @@ summary(::HomogeneousBodyHeating) = string("Single band light attenuation and bo
 show(io::IO, body_heating::HomogeneousBodyHeating) = println(io, string(summary(body_heating), " with: \n",
                                                              " Attenuation coefficient: ", body_heating.water_attenuation_coefficient, " (1 / m)\n",
                                                              " Heat capacity: ", body_heating.water_heat_capacity, " (J / K / kg)"))
-

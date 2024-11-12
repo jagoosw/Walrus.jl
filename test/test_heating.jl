@@ -24,7 +24,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     # Density and specific head are 1 so the water should have increased in temp by ~6.3212 K
     @test Array(interior(model.tracers.T, 1, 1, 10))[1] ≈ 10 * (1 - exp(-1))
 
-    # TODO: change this test so it is actually correct when spacing is not 1 in all dimensions
+    # TODO: change this test so it is actually correct when spacing is not 1 in all dimensions - dw I checked it is (23/8/24)
 
     #####
     ##### Test radiative heating/cooling (no sensible or latent flux)
@@ -97,21 +97,27 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     # no heat exchange when temperatures equal
     set!(model, T = 0)
     
-    time_step!(model, 1)
+    for n in 1:2
+        time_step!(model, 1)
+    end
 
     @test Array(interior(model.tracers.T, 1, 1, 10))[1] ≈ 0
 
     # when the water is warmer, it looses heat
     set!(model, T = 1)
     
-    time_step!(model, 1)
+    for n in 1:2
+        time_step!(model, 1)
+    end
 
     @test Array(interior(model.tracers.T, 1, 1, 10))[1] < 1
 
     # when the water is colder, it gains heat
     set!(model, T = -1)
     
-    time_step!(model, 1)
+    for n in 1:2
+        time_step!(model, 1)
+    end
 
     @test Array(interior(model.tracers.T, 1, 1, 10))[1] > -1
 
@@ -137,21 +143,27 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     # no heat exchange when vapour pressure equalised
     set!(model, T = 0)
     
-    time_step!(model, 1)
+    for n in 1:2
+        time_step!(model, 1)
+    end
 
     @test Array(interior(model.tracers.T, 1, 1, 10))[1] ≈ 0
 
     # when the water has higher saturation pressure, it looses heat
     set!(model, T = 1)
     
-    time_step!(model, 1)
+    for n in 1:2
+        time_step!(model, 1)
+    end
 
     @test Array(interior(model.tracers.T, 1, 1, 10))[1] < 1
 
     # when the water has lower saturation pressure, it gains heat
     set!(model, T = -1)
     
-    time_step!(model, 1)
+    for n in 1:2
+        time_step!(model, 1)
+    end
 
     @test Array(interior(model.tracers.T, 1, 1, 10))[1] > -1
 
