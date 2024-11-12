@@ -100,4 +100,3 @@ summary(::HomogeneousBodyHeating) = string("Single band light attenuation and bo
 show(io::IO, body_heating::HomogeneousBodyHeating) = println(io, string(summary(body_heating), " with: \n",
                                                              " Attenuation coefficient: ", body_heating.water_attenuation_coefficient, " (1 / m)\n",
                                                              " Heat capacity: ", body_heating.water_heat_capacity, " (J / K / kg)"))
-
