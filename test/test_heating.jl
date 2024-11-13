@@ -41,6 +41,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
+                                  timestepper = :QuasiAdamsBashforth2,
                                   boundary_conditions = (; T = FieldBoundaryConditions(top = surface_heat_exchange)))
 
     set!(model, T = -273.15)
@@ -65,6 +66,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
+                                  timestepper = :QuasiAdamsBashforth2,
                                   boundary_conditions = (; T = FieldBoundaryConditions(top = surface_heat_exchange)))
 
     set!(model, T = -273.15)
@@ -92,6 +94,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
+                                  timestepper = :QuasiAdamsBashforth2,
                                   boundary_conditions = (; T = FieldBoundaryConditions(top = surface_heat_exchange)))
 
     # no heat exchange when temperatures equal
@@ -138,6 +141,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
+                                  timestepper = :QuasiAdamsBashforth2,
                                   boundary_conditions = (; T = FieldBoundaryConditions(top = surface_heat_exchange)))
 
     # no heat exchange when vapour pressure equalised
@@ -178,7 +182,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     biogeochemistry = Biogeochemistry(JustPhytoplankton(); light_attenuation = light_attenuation_model)
 
-    model = NonhydrostaticModel(; grid, biogeochemistry, forcing = (; T = Forcing(body_heating, discrete_form=true)), tracers = :T)
+    model = NonhydrostaticModel(; grid, biogeochemistry, timestepper = :QuasiAdamsBashforth2, forcing = (; T = Forcing(body_heating, discrete_form=true)), tracers = :T)
 
     Pᵢ(x, y, z) = 2.5 + z
 
