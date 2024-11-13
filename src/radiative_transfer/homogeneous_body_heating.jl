@@ -60,7 +60,7 @@ julia> body_heating = HomogeneousBodyHeating(; surface_flux = (x, y, t) -> 100)
 julia> model = NonhydrostaticModel(; grid, forcing = (; T = Forcing(body_heating, discrete_form=true)), tracers = :T)
 NonhydrostaticModel{CPU, RectilinearGrid}(time = 0 seconds, iteration = 0)
 ├── grid: 128×128×128 RectilinearGrid{Float64, Oceananigans.Grids.Periodic, Oceananigans.Grids.Periodic, Oceananigans.Grids.Bounded} on Oceananigans.Architectures.CPU with 3×3×3 halo
-├── timestepper: QuasiAdamsBashforth2TimeStepper
+├── timestepper: RungeKutta3TimeStepper
 ├── advection scheme: Centered reconstruction order 2
 ├── tracers: T
 ├── closure: Nothing
