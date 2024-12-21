@@ -34,7 +34,7 @@ module WindDrivenStokesParameterisation
 
 export WindDrivenStokesDrift, WindDrivenStokesDriftSetup
 
-using Roots
+using Roots, Adapt
 
 using Oceananigans.Architectures: on_architecture, CPU, architecture
 using Oceananigans.BuoyancyModels: g_Earth
