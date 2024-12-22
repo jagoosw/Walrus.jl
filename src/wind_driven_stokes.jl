@@ -108,7 +108,7 @@ end
 @inline function surface_drift_velocity(z, t, params)
     wind = params.wind
 
-    uʷ = abs(get_value(wind.reference_wind_speed, nothing, nothing, params.grid, params.clock))
+    uʷ = abs(wind.reference_wind_speed.func(nothing, nothing, t))
 
     dc = wind.drag_coefficient
 
@@ -155,14 +155,15 @@ end
 @inline ∂t_vˢ(z, t, params) = (vˢ(z, t + params.time_interpolation_window/2, params) - vˢ(z, t - params.time_interpolation_window/2, params))/params.time_interpolation_window
 @inline ∂z_vˢ(z, t, params) = - ∂z_drift_velocity(z, t, params) * cosd(params.direction)
 
-function WindDrivenStokesDriftSetup(; wind, depth,
-                                        direction = 0,
-                                        gravitational_acceleration = g_Earth,
-                                        time_interpolation_window = 240,
-                                        precomputed_wavenumbers = false,
-                                        precomputed_peak_frequencies = [0.3:0.001:1000;],
-                                        grid = nothing,
-                                        arch = isnothing(grid) ? CPU() : architecture(grid))
+function WindDrivenStokesDriftSetup(grid, clock; 
+                                    wind, depth,
+                                    direction = 0,
+                                    gravitational_acceleration = g_Earth,
+                                    time_interpolation_window = 240,
+                                    precomputed_wavenumbers = false,
+                                    precomputed_peak_frequencies = [0.3:0.001:1000;],
+                                    grid = nothing,
+                                    arch = isnothing(grid) ? CPU() : architecture(grid))
 
     parameterisation = WindDrivenStokesDrift(; wind, depth, direction, gravitational_acceleration, time_interpolation_window, precomputed_wavenumbers, precomputed_peak_frequencies, grid, arch)
 
