@@ -155,7 +155,7 @@ end
 @inline ∂t_vˢ(z, t, params) = (vˢ(z, t + params.time_interpolation_window/2, params) - vˢ(z, t - params.time_interpolation_window/2, params))/params.time_interpolation_window
 @inline ∂z_vˢ(z, t, params) = - ∂z_drift_velocity(z, t, params) * cosd(params.direction)
 
-function WindDrivenStokesDriftSetup(grid, clock; 
+function WindDrivenStokesDriftSetup(; 
                                     wind, depth,
                                     direction = 0,
                                     gravitational_acceleration = g_Earth,
