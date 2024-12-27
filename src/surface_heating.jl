@@ -232,18 +232,16 @@ end
 
     z₀ = find_velocity_roughness_length(drag_coefficient, wind_speed, 10, params)
 
-    ū = κ * wind_speed / log(10 / z₀)
+    ū = κ * wind_speed / log(10 / max(0, z₀))
 
-    isfinite(ū) || (ū = 0)
+    ū = ifelse(infinite(ū), ū,  0)
 
-    Rᵣ = ū * z₀ / params.ν
+    Rᵣ = ū * max(0, z₀) / params.ν
     zₒₜ = min(1.15e-4, 5.5e-5 * Rᵣ ^ -0.6)
 
-    result = params.κ ^ 2 / (log(10/z₀) * log(10/zₒₜ)) # hmm this might be meant to be 2
-
-    isfinite(result) || (result = 0) # this should only occur if wind speed is zero in which case stress is zero anyway
-
-    return result
+    result = params.κ ^ 2 / (log(10/max(0, z₀)) * log(10/zₒₜ)) # hmm this might be meant to be 2
+  
+    return ifelse(infinite(result), result, 0)
 end
 
 # parameterisation for vapour pressure with default coefficients from [alduchov1996](@citet).
