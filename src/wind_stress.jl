@@ -357,7 +357,7 @@ end
 
     Cᵈ = (params.κ / log(10 / max(0, z₀))) ^ 2
 
-    Cᵈ = ifelse(isinf(Cᵈ), 0, Cᵈ) # occurs as z₀ -> 0 
+    Cᵈ = ifelse(isfinite(Cᵈ), Cᵈ, 0) # occurs as z₀ -> 0 
     
     return Cᵈ
 end
