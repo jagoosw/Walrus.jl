@@ -355,9 +355,9 @@ end
 
     z₀ = find_velocity_roughness_length(dc, wind_speed, 10, params)
 
-    Cᵈ = (params.κ / log(10 / z₀)) ^ 2
+    Cᵈ = (params.κ / log(10 / max(0, z₀))) ^ 2
 
-    isfinite(Cᵈ) || (Cᵈ = 0) # occurs when z₀ -> reference_height
+    Cᵈ = ifelse(isinf(Cᵈ), 0, Cᵈ) # occurs as z₀ -> 0 
     
     return Cᵈ
 end
