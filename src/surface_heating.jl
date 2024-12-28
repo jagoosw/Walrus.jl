@@ -241,7 +241,7 @@ end
 
     result = params.κ ^ 2 / (log(10/max(0, z₀)) * log(10/zₒₜ)) # hmm this might be meant to be 2
   
-    return ifelse(infinite(result), result, 0)
+    return ifelse(isfinite(result), result, 0)
 end
 
 # parameterisation for vapour pressure with default coefficients from [alduchov1996](@citet).
