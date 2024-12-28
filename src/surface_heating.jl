@@ -234,7 +234,7 @@ end
 
     ū = κ * wind_speed / log(10 / max(0, z₀))
 
-    ū = ifelse(infinite(ū), ū,  0)
+    ū = ifelse(isfinite(ū), ū,  0)
 
     Rᵣ = ū * max(0, z₀) / params.ν
     zₒₜ = min(1.15e-4, 5.5e-5 * Rᵣ ^ -0.6)
