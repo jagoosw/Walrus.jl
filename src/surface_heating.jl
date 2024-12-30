@@ -221,17 +221,14 @@ end
 @inline function Cʰ(drag_coefficient::LogarithmicNeutralWind, wind_speed)
     κ = drag_coefficient.monin_obukhov_stability_length
     ν = drag_coefficient.air_kinematic_viscosity
-    aᶜ = drag_coefficient.charnock_coefficient
-    b = drag_coefficient.gravity_wave_coefficient
+    α = drag_coefficient.charnock_coefficient
     g = drag_coefficient.gravity_acceleration
 
-    params = (; κ, ν, aᶜ, b, g, wind_speed, z = 10)
-
-    Cd = drag_coefficient(wind_speed, 10, params)
+    Cd = drag_coefficient(wind_speed)
 
     u′ = √(Cd * wind_speed)
 
-    z₀ = aᶜ * u′^2 / g
+    z₀ = α * u′^2 / g
 
     Rᵣ = ū * z₀ / ν
 
