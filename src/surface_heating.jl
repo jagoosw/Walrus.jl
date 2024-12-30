@@ -10,8 +10,7 @@ using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 
 using Walrus: get_value, normalise_surface_function
 using Walrus.WindStressModel: WindStress, 
-                              LogarithmicNeutralWind, 
-                              find_velocity_roughness_length
+                              LogarithmicNeutralWind
 
 import Adapt: adapt_structure
 
@@ -226,22 +225,19 @@ end
     b = drag_coefficient.gravity_wave_coefficient
     g = drag_coefficient.gravity_acceleration
 
-    params = (; κ, ν, aᶜ, b, g, wind_speed, z = 2)
+    params = (; κ, ν, aᶜ, b, g, wind_speed, z = 10)
 
-    params = (; κ, ν, aᶜ, b, g)
+    Cd = drag_coefficient(wind_speed, 10, params)
 
-    z₀ = find_velocity_roughness_length(drag_coefficient, wind_speed, 10, params)
+    u′ = √(Cd * wind_speed)
 
-    z₀ = min(10, max(0, z₀))
+    z₀ = aᶜ * u′^2 / g
 
-    ū = κ * wind_speed / log(10 / max(0, z₀))
+    Rᵣ = ū * z₀ / ν
 
-    ū = ifelse(isfinite(ū), ū,  0)
-
-    Rᵣ = ū * z₀ / params.ν
     zₒₜ = min(1.15e-4, 5.5e-5 * Rᵣ ^ -0.6)
 
-    result = params.κ ^ 2 / (log(10/z₀) * log(10/zₒₜ)) # hmm this might be meant to be 2
+    result = κ  / log(10/zₒₜ) * √Cd 
   
     return ifelse(isfinite(result), result, 0)
 end
