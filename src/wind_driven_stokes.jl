@@ -108,7 +108,7 @@ end
 @inline function surface_drift_velocity(z, t, params)
     wind = params.wind
 
-    uʷ = abs(get_value(wind.reference_wind_speed, nothing, nothing, nothing, t))
+    uʷ = abs(get_value(wind.reference_wind_speed, nothing, nothing, t))
 
     dc = wind.drag_coefficient
 
