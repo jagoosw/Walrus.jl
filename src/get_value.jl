@@ -17,7 +17,7 @@ end
     return f.func(x, y, t, args...)
 end
 
-@inline get_value(f::ContinuousSurfaceFunction, ::Nothing, ::Nothing, t, args...) = f(0, 0, t)
+@inline get_value(f::ContinuousSurfaceFunction, ::Nothing, ::Nothing, t, args...) = f.func(0, 0, t)
 
 struct DiscreteSurfaceFuncton{F}
     func :: F
