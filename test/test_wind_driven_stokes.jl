@@ -3,7 +3,7 @@ using Oceananigans.Units
 @testset "Wind stress" begin
     grid = RectilinearGrid(arch; size = (32, 32, 16), extent = (6.55*3, 6.55*3, 10))
 
-    wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 1., reference_wind_direction = 270., drag_coefficient = LogarithmicNeutralWind(; precomputed_roughness_length = true))
+    wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 1., reference_wind_direction = 270., drag_coefficient = LogarithmicNeutralWind(; precompute_drag_coefficients = true))
     stokes_drift = WindDrivenStokesDriftSetup(; wind = wind_stress_boundary_conditions.u.condition.func,
                                                 direction = 270,
                                                 depth = 10, precomputed_wavenumbers = true)

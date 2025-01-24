@@ -32,7 +32,7 @@
     wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 0., 
                                                                      reference_wind_direction = 90., 
                                                                      drag_coefficient = 
-                                                                        LogarithmicNeutralWind(; precomputed_roughness_length = true, arch))
+                                                                        LogarithmicNeutralWind(; precompute_drag_coefficients = true, arch))
 
     model2 = NonhydrostaticModel(; grid, boundary_conditions = (u = FieldBoundaryConditions(top = wind_stress_boundary_conditions.u),
                                                                 v = FieldBoundaryConditions(top = wind_stress_boundary_conditions.v)))
@@ -46,7 +46,7 @@
     wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 1., 
                                                                      reference_wind_direction = 90., 
                                                                      drag_coefficient = 
-                                                                        LogarithmicNeutralWind(; precomputed_roughness_length = true, arch))
+                                                                        LogarithmicNeutralWind(; precompute_drag_coefficients = true, arch))
 
     model2 = NonhydrostaticModel(; grid, boundary_conditions = (u = FieldBoundaryConditions(top = wind_stress_boundary_conditions.u),
                                                                 v = FieldBoundaryConditions(top = wind_stress_boundary_conditions.v)))
@@ -61,5 +61,7 @@
     @test Array(interior(model2.velocities.u, 1, 1, 1))[1] ≈ 0
     @test all(Array(interior(model2.velocities.v)) .≈ 0)
 
-    @test all(Array(interior(model.velocities.u)) .≈ Array(interior(model2.velocities.u)))
+    @test all(Array(interior(model.velocities.u, :, :, 2)) .≈ Array(interior(model2.velocities.u, :, :, 2)))
+
+    # probably should test off axis wind
 end

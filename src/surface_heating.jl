@@ -10,8 +10,7 @@ using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 
 using Walrus: get_value, normalise_surface_function
 using Walrus.WindStressModel: WindStress, 
-                              LogarithmicNeutralWind, 
-                              find_velocity_roughness_length
+                              LogarithmicNeutralWind
 
 import Adapt: adapt_structure
 
@@ -222,28 +221,22 @@ end
 @inline function Cʰ(drag_coefficient::LogarithmicNeutralWind, wind_speed)
     κ = drag_coefficient.monin_obukhov_stability_length
     ν = drag_coefficient.air_kinematic_viscosity
-    aᶜ = drag_coefficient.charnock_coefficient
-    b = drag_coefficient.gravity_wave_coefficient
+    α = drag_coefficient.charnock_coefficient
     g = drag_coefficient.gravity_acceleration
 
-    params = (; κ, ν, aᶜ, b, g, wind_speed, z = 2)
+    Cd = drag_coefficient(wind_speed)
 
-    params = (; κ, ν, aᶜ, b, g)
+    u′ = √(Cd * wind_speed)
 
-    z₀ = find_velocity_roughness_length(drag_coefficient, wind_speed, 10, params)
+    z₀ = α * u′^2 / g
 
-    ū = κ * wind_speed / log(10 / z₀)
+    Rᵣ = u′ * z₀ / ν
 
-    isfinite(ū) || (ū = 0)
-
-    Rᵣ = ū * z₀ / params.ν
     zₒₜ = min(1.15e-4, 5.5e-5 * Rᵣ ^ -0.6)
 
-    result = params.κ ^ 2 / (log(10/z₀) * log(10/zₒₜ)) # hmm this might be meant to be 2
-
-    isfinite(result) || (result = 0) # this should only occur if wind speed is zero in which case stress is zero anyway
-
-    return result
+    result = κ  / log(10/zₒₜ) * √Cd 
+  
+    return ifelse(isfinite(result), result, 0)
 end
 
 # parameterisation for vapour pressure with default coefficients from [alduchov1996](@citet).
