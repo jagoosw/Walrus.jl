@@ -204,11 +204,11 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     Chlʳ = [(Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eʳ, (Pᵢ(0, 0, zc[1]) * Rᶜₚ / r) ^ eʳ]
     Chlᵇ = [(Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eᵇ, (Pᵢ(0, 0, zc[1]) * Rᶜₚ / r) ^ eᵇ]
 
-    ∫Chlʳ = [(Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eʳ * Δz/2]
-    ∫Chlᵇ = [(Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eᵇ * Δz/2]
+    ∫Chlʳ = [(Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eʳ * Δz[1, 1, 1]/2]
+    ∫Chlᵇ = [(Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eᵇ * Δz[1, 1, 1]/2]
 
-    push!(∫Chlʳ, ∫Chlʳ[1] + (Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eʳ * Δz/2 + (Pᵢ(0, 0, zc[1]) * Rᶜₚ / r) ^ eʳ * Δz/2)
-    push!(∫Chlᵇ, ∫Chlᵇ[1] + (Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eᵇ * Δz/2 + (Pᵢ(0, 0, zc[1]) * Rᶜₚ / r) ^ eᵇ * Δz/2)
+    push!(∫Chlʳ, ∫Chlʳ[1] + (Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eʳ * Δz[1, 1, 1]/2 + (Pᵢ(0, 0, zc[1]) * Rᶜₚ / r) ^ eʳ * Δz[1, 1, 1]/2)
+    push!(∫Chlᵇ, ∫Chlᵇ[1] + (Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eᵇ * Δz[1, 1, 1]/2 + (Pᵢ(0, 0, zc[1]) * Rᶜₚ / r) ^ eᵇ * Δz[1, 1, 1]/2)
 
     expected_PAR = 100.0 .* [exp(zc[2] * kʳ - ∫Chlʳ[1] * χʳ) + exp(zc[2] * kᵇ - ∫Chlᵇ[1] * χᵇ),
                              exp(zc[1] * kʳ - ∫Chlʳ[2] * χʳ) + exp(zc[1] * kᵇ - ∫Chlᵇ[2] * χᵇ)] ./ 2
