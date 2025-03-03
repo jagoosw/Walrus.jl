@@ -226,7 +226,7 @@ end
 
     Cd = drag_coefficient(wind_speed)
 
-    u′ = √(Cd * wind_speed)
+    u′ = √(Cd) * wind_speed
 
     z₀ = α * u′^2 / g
 
