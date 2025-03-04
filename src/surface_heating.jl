@@ -219,16 +219,16 @@ function SurfaceHeatExchangeBoundaryCondition(; wind_stress,
 end
 
 @inline function Cʰ(drag_coefficient::LogarithmicNeutralWind, wind_speed)
-    κ = drag_coefficient.monin_obukhov_stability_length
-    ν = drag_coefficient.air_kinematic_viscosity
-    α = drag_coefficient.charnock_coefficient
-    g = drag_coefficient.gravity_acceleration
-
+    κ  = drag_coefficient.monin_obukhov_stability_length
+    ν  = drag_coefficient.air_kinematic_viscosity
+    ac = drag_coefficient.charnock_coefficient
+    α  = drag_coefficient.gravity_wave_coefficient
+    g  = drag_coefficient.gravity_acceleration
     Cd = drag_coefficient(wind_speed)
 
     u′ = √(Cd) * wind_speed
 
-    z₀ = α * u′^2 / g
+    z₀ = ac * u′^2 / g + α * ν / u′
 
     Rᵣ = u′ * z₀ / ν
 
