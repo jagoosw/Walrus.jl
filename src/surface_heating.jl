@@ -234,7 +234,7 @@ end
 
     zₒₜ = min(1.15e-4, 5.5e-5 * Rᵣ ^ -0.6)
 
-    result = κ  / log(10/zₒₜ) * √Cd 
+    result = κ^2  / (log(2/zₒₜ) * log(2/z₀))
   
     return ifelse(isfinite(result), result, 0)
 end
