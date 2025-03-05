@@ -240,7 +240,6 @@ end
 end
 
 # parameterisation for vapour pressure with default coefficients from [alduchov1996](@citet).
-# THIS MIGHT BE WRONG!!
 @kwdef struct AugustRocheMagnusVapourPressure{FT}
     e0 :: FT = 6.122
     p :: FT = 1013.0
