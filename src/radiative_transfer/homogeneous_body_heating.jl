@@ -92,7 +92,7 @@ end
 
     zᶠ⁺ = znode(i, j, k + 1, grid, Center(), Center(), Face())
 
-    return α * get_value(heating.surface_flux, i, j, grid, clock) * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) / (ρ * cₚ) / (zᶠ⁺ - zᶠ)
+    return get_value(heating.surface_flux, i, j, grid, clock) * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) / (ρ * cₚ) / (zᶠ⁺ - zᶠ)
 end
 
 
