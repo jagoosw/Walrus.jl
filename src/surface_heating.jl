@@ -14,7 +14,7 @@ using Walrus.WindStressModel: WindStress,
 
 import Adapt: adapt_structure
 
-struct SurfaceHeatExchange{WS, AT, LH, VP, FT} <: Function
+struct SurfaceHeatExchange{WS, AT, LH, VP, FT, DL} <: Function
                    wind_stress :: WS
                air_temperature :: AT
       latent_heat_vaporisation :: LH
@@ -25,6 +25,8 @@ struct SurfaceHeatExchange{WS, AT, LH, VP, FT} <: Function
                    air_density :: FT
         air_water_mixing_ratio :: FT
      stephan_boltzman_constant :: FT
+              ocean_emissivity :: FT
+          downwelling_longwave :: DL
 end
 
 adapt_structure(to, sh::SurfaceHeatExchange) = 
@@ -32,12 +34,14 @@ adapt_structure(to, sh::SurfaceHeatExchange) =
                         adapt(to, sh.air_temperature),
                         adapt(to, sh.latent_heat_vaporisation),
                         adapt(to, sh.vapour_pressure),
-                        sh.water_specific_heat_capacity,
-                        sh.water_density,
-                        sh.air_specific_heat_capacity,
-                        sh.air_density,
-                        sh.air_water_mixing_ratio,
-                        sh.stephan_boltzman_constant)
+                        adapt(to, sh.water_specific_heat_capacity),
+                        adapt(to, sh.water_density),
+                        adapt(to, sh.air_specific_heat_capacity),
+                        adapt(to, sh.air_density),
+                        adapt(to, h.air_water_mixing_ratio),
+                        sh.stephan_boltzman_constant,
+                        adapt(to, sh.ocean_emissivity),
+                        adapt(to, sh.downwelling_longwave))
 
 """
     SurfaceHeatExchange(; wind_stress,
@@ -49,7 +53,9 @@ adapt_structure(to, sh::SurfaceHeatExchange) =
                           air_specific_heat_capacity = 1003.5, # J / K / kg
                           air_density = 1.204, # kg
                           air_water_mixing_ratio = 0.001, # kg / kg
-                          stephan_boltzman_constant = 5.670374419e-8) # W / K⁴
+                          stephan_boltzman_constant = 5.670374419e-8, # W / K⁴
+                          ocean_emissivity = 0.97, #
+                          downwelling_longwave = (T, args...)->60) # W
 
 Specifies surface heat exhange in the form:
 ```math
@@ -143,8 +149,10 @@ function SurfaceHeatExchange(; wind_stress,
                                water_density = 1026., #kg / m³
                                air_specific_heat_capacity = 1003.5, # J / K / kg
                                air_density = 1.204, # kg
-                               air_water_mixing_ratio = 0.001, # kg / kgs
-                               stephan_boltzman_constant = 5.670374419e-8) # W / K⁴
+                               air_water_mixing_ratio = 0.006, # kg / kgs
+                               stephan_boltzman_constant = 5.670374419e-8, # W / K⁴
+                               ocean_emissivity = 0.97, #
+                               downwelling_longwave = (T, args...) -> 60) # W
             
     air_temperature = normalise_surface_function(air_temperature)
 
@@ -152,7 +160,7 @@ function SurfaceHeatExchange(; wind_stress,
                                latent_heat_vaporisation, vapour_pressure,
                                water_specific_heat_capacity, water_density,
                                air_specific_heat_capacity, air_density, air_water_mixing_ratio,
-                               stephan_boltzman_constant)
+                               stephan_boltzman_constant, ocean_emissivity, downwelling_longwave)
 end
 
 """
@@ -165,7 +173,8 @@ end
                           air_specific_heat_capacity = 1003.5, # J / K / kg
                           air_density = 1.204, # kg
                           air_water_mixing_ratio = 0.001, # kg / kg
-                          stephan_boltzman_constant = 5.670374419e-8) # W / K⁴
+                          stephan_boltzman_constant = 5.670374419e-8, # W / K⁴
+                          ocean_emissivity = 0.97) #
 
 A convenience constructor returning `SurfaceHeatExchange` as a boundary condition
 
@@ -196,24 +205,8 @@ FluxBoundaryCondition: DiscreteBoundaryFunction with (::SurfaceHeatExchange{Wind
 
 ```
 """
-function SurfaceHeatExchangeBoundaryCondition(; wind_stress,
-                                                air_temperature = 18, # °C
-                                                latent_heat_vaporisation = EmpiricalLatentHeatVaporisation(),
-                                                vapour_pressure = AugustRocheMagnusVapourPressure(),
-                                                water_specific_heat_capacity = 3991., # J / K / kg
-                                                water_density = 1026., #kg / m³
-                                                air_specific_heat_capacity = 1003.5, # J / K / kg
-                                                air_density = 1.204, # kg
-                                                air_water_mixing_ratio = 0.001, # kg / kg
-                                                stephan_boltzman_constant = 5.670374419e-8) # W / K⁴
-            
-    air_temperature = normalise_surface_function(air_temperature)
-
-    surface_heat_exchange =  SurfaceHeatExchange(wind_stress, air_temperature,
-                                                 latent_heat_vaporisation, vapour_pressure,
-                                                 water_specific_heat_capacity, water_density,
-                                                 air_specific_heat_capacity, air_density, air_water_mixing_ratio,
-                                                 stephan_boltzman_constant)
+function SurfaceHeatExchangeBoundaryCondition(; wind_stress, kwargs...)
+    surface_heat_exchange =  SurfaceHeatExchange(wind_stress, kwargs...)
 
     return FluxBoundaryCondition(surface_heat_exchange, discrete_form=true)
 end
@@ -241,7 +234,7 @@ end
 
 # parameterisation for vapour pressure with default coefficients from [alduchov1996](@citet).
 @kwdef struct AugustRocheMagnusVapourPressure{FT}
-    e0 :: FT = 6.122
+   e0 :: FT = 6.122
     p :: FT = 1013.0
     a :: FT = 0.61094
     b :: FT = 17.625
@@ -249,10 +242,13 @@ end
 end
 
 @inline function (q::AugustRocheMagnusVapourPressure)(T)
-  es = q.e0 * exp(q.b * T / (T + q.c))
+  es = water_vapour_pressure(q, T)
 
   return q.a * es / (q.p - (1 - q.a) * es)
 end
+
+@inline water_vapour_pressure(q::AugustRocheMagnusVapourPressure, T) = 
+    q.e0 * exp(q.b * T / (T + q.c))
 
 # parameterisation for latent heat of vaporisation for water [yu2019](@citet)
 @kwdef struct EmpiricalLatentHeatVaporisation{FT}
@@ -271,6 +267,7 @@ end
     ρᵃ  = interface.air_density
     cₚᵃ = interface.air_specific_heat_capacity
     qₐ  = interface.air_water_mixing_ratio
+    ϵ   = interface.ocean_emissivity
 
     ρʷ  = interface.water_density
     cₚʷ = interface.water_specific_heat_capacity
@@ -293,7 +290,7 @@ end
 
     cʰ = Cʰ(interface.wind_stress.drag_coefficient, relative_speed)
     
-    radiative_cooling = σ * ((273.15 + T) ^ 4 - (273.15 + air_temperature) ^ 4) # J / m² / s
+    radiative_cooling = ϵ * σ * (273.15 + T) ^ 4 - interface.downwelling_longwave(i, j, grid, clock, air_temperature, interface) # J / m² / s
 
     sensible_cooling = relative_speed * ρᵃ * cₚᵃ * cʰ * (T - air_temperature) # (m / s) (kg / m³) (J / kg / K) (1) (k) -> (1 / s) (1 / m²) (J) -> J / m² / s
 
@@ -303,6 +300,60 @@ end
     latent_cooling = relative_speed * ρᵃ * L * cʰ * (q - qₐ) # (m / s) (kg / m³) (J / kg) (1) (kg / kg) -> (m / s) (m³) (J) -> J / m² / s
 
     return (radiative_cooling + sensible_cooling + latent_cooling) / (ρʷ * cₚʷ) # (J / m² / s) / ((kg / m³) (J / kg / K)) -> (J / m² / s) / ( J / m³ / K)) -> K m / s
+end
+
+# empirical downwelling longwave
+
+struct EmpiricalDownwellingLongwave{FT, CF} # Brunt, 1932 / Yang et al., 2023 Atmos. Chem. Phys.
+                 a :: FT
+                 b :: FT
+                 α :: FT
+                 β :: FT
+                 γ :: FT
+                 δ :: FT
+                 ζ :: FT
+    cloud_fraction :: CF
+
+    function EmpiricalDownwellingLongwave(; a::FT = 0.599,
+                                            b::FT = 0.053,
+                                            α::FT = 0.178,
+                                            β::FT = 0.339,
+                                            γ::FT = 0.075,
+                                            δ::FT = 0.395,
+                                            ζ::FT = 0.253,
+                                            cloud_fraction = 0.3) where FT
+
+        cloud_fraction = normalise_surface_function(cloud_fraction)
+
+        CF = typeof(cloud_fraction)
+
+        return new{FT, CF}(a, b, α, β, γ, δ, ζ, cloud_fraction)
+    end
+end
+
+@inline function (ed::EmpiricalDownwellingLongwave)(i, j, grid, clock, T, interface)
+    a = ed.a
+    b = ed.b
+
+    α = ed.α
+    β = ed.β
+    γ = ed.γ
+    δ = ed.δ
+    ζ = ed.ζ
+
+    σ = interface.stephan_boltzman_constant
+
+    q  = interface.air_water_mixing_ratio
+    q′ = interface.vapour_pressure
+
+    e = q *  q′.p / (q′.a + (1 - q′.a) * q)
+
+    N = get_value(ed.cloud_fraction, i, j, grid, clock)
+
+    eₛ = water_vapour_pressure(q′, T)
+    RH = 100 * e / eₛ
+
+    return ((a + b * √e) * (1 - α * N^β) + γ * N^δ * RH^ζ) * σ * (T+273.15)^4
 end
 
 end # module
