@@ -38,7 +38,7 @@ adapt_structure(to, sh::SurfaceHeatExchange) =
                         adapt(to, sh.water_density),
                         adapt(to, sh.air_specific_heat_capacity),
                         adapt(to, sh.air_density),
-                        adapt(to, h.air_water_mixing_ratio),
+                        adapt(to, sh.air_water_mixing_ratio),
                         sh.stephan_boltzman_constant,
                         adapt(to, sh.ocean_emissivity),
                         adapt(to, sh.downwelling_longwave))
