@@ -152,7 +152,7 @@ function SurfaceHeatExchange(; wind_stress,
                                air_water_mixing_ratio = 0.006, # kg / kgs
                                stephan_boltzman_constant = 5.670374419e-8, # W / K⁴
                                ocean_emissivity = 0.97, #
-                               downwelling_longwave = (T, args...) -> 60) # W
+                               downwelling_longwave = EmpiricalDownwellingLongwave()) # W
             
     air_temperature = normalise_surface_function(air_temperature)
 
