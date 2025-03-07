@@ -206,7 +206,7 @@ FluxBoundaryCondition: DiscreteBoundaryFunction with (::SurfaceHeatExchange{Wind
 ```
 """
 function SurfaceHeatExchangeBoundaryCondition(; wind_stress, kwargs...)
-    surface_heat_exchange =  SurfaceHeatExchange(wind_stress, kwargs...)
+    surface_heat_exchange = SurfaceHeatExchange(; wind_stress, kwargs...)
 
     return FluxBoundaryCondition(surface_heat_exchange, discrete_form=true)
 end
