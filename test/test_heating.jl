@@ -1,6 +1,8 @@
 using Oceananigans.Biogeochemistry: AbstractContinuousFormBiogeochemistry
 import Oceananigans.Biogeochemistry: required_biogeochemical_tracers
 
+using Walrus.SurfaceHeatingModel: EmpiricalDownwellingLongwave, AugustRocheMagnusVapourPressure
+
 struct JustPhytoplankton <: AbstractContinuousFormBiogeochemistry end
 required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
@@ -34,10 +36,11 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     surface_heat_exchange = SurfaceHeatExchangeBoundaryCondition(; wind_stress = wind_stress_boundary_conditions.u.condition.func,
                                                                    air_temperature = -272.15,
-                                                                   air_density = 0.,
-                                                                   stephan_boltzman_constant = 1.,
-                                                                   water_density = 1.,
-                                                                   water_specific_heat_capacity = 1.)
+                                                                   air_density = 0.0,
+                                                                   stephan_boltzman_constant = 1.0,
+                                                                   water_density = 1.0,
+                                                                   water_specific_heat_capacity = 1.0,
+                                                                   downwelling_longwave = EmpiricalDownwellingLongwave(; b = 0.0, a = 1.0, α = 0.0, γ = 0.0))
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
@@ -59,20 +62,21 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     surface_heat_exchange = SurfaceHeatExchangeBoundaryCondition(; wind_stress = wind_stress_boundary_conditions.u.condition.func,
                                                                    air_temperature = -272.15,
-                                                                   air_density = 0.,
-                                                                   stephan_boltzman_constant = 1.,
-                                                                   water_density = 1.,
-                                                                   water_specific_heat_capacity = 1.)
+                                                                   air_density = 1.0,
+                                                                   air_specific_heat_capacity = 1.0,
+                                                                   stephan_boltzman_constant = 0.0,
+                                                                   water_density = 1.0,
+                                                                   water_specific_heat_capacity = 1.0,
+                                                                   latent_heat_vaporisation = (args...)->0)
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
                                   timestepper = :QuasiAdamsBashforth2,
                                   boundary_conditions = (; T = FieldBoundaryConditions(top = surface_heat_exchange)))
 
-    set!(model, T = -273.15)
+    set!(model, T = -273.15, u = 1)
     
-    # 1 W heating -> 1 K m / s for 1s with Δz = 1m -> -272.15 K
-    time_step!(model, 1)
+    time_step!(model, 1/0.0015504244655092465) # 1/Cʰ at U = 1m/s
 
     @test Array(interior(model.tracers.T, 1, 1, 10))[1] ≈ -272.15
 
@@ -134,7 +138,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
                                                                    air_temperature = 0,
                                                                    air_density = 1.,
                                                                    air_specific_heat_capacity = 0.,
-                                                                   air_water_mixing_ratio = 0.00061094,
+                                                                   air_water_mixing_ratio = AugustRocheMagnusVapourPressure()(0),
                                                                    stephan_boltzman_constant = 0.,
                                                                    water_density = 1.,
                                                                    water_specific_heat_capacity = 1.)
@@ -157,7 +161,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     set!(model, T = 1)
     
     for n in 1:2
-        time_step!(model, 1)
+        time_step!(model, 0.1)
     end
 
     @test Array(interior(model.tracers.T, 1, 1, 10))[1] < 1
@@ -166,7 +170,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     set!(model, T = -1)
     
     for n in 1:2
-        time_step!(model, 1)
+        time_step!(model, 0.1)
     end
 
     @test Array(interior(model.tracers.T, 1, 1, 10))[1] > -1
@@ -204,11 +208,11 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     Chlʳ = [(Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eʳ, (Pᵢ(0, 0, zc[1]) * Rᶜₚ / r) ^ eʳ]
     Chlᵇ = [(Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eᵇ, (Pᵢ(0, 0, zc[1]) * Rᶜₚ / r) ^ eᵇ]
 
-    ∫Chlʳ = [(Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eʳ * Δz/2]
-    ∫Chlᵇ = [(Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eᵇ * Δz/2]
+    ∫Chlʳ = [(Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eʳ * Δz[1, 1, 1]/2]
+    ∫Chlᵇ = [(Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eᵇ * Δz[1, 1, 1]/2]
 
-    push!(∫Chlʳ, ∫Chlʳ[1] + (Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eʳ * Δz/2 + (Pᵢ(0, 0, zc[1]) * Rᶜₚ / r) ^ eʳ * Δz/2)
-    push!(∫Chlᵇ, ∫Chlᵇ[1] + (Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eᵇ * Δz/2 + (Pᵢ(0, 0, zc[1]) * Rᶜₚ / r) ^ eᵇ * Δz/2)
+    push!(∫Chlʳ, ∫Chlʳ[1] + (Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eʳ * Δz[1, 1, 1]/2 + (Pᵢ(0, 0, zc[1]) * Rᶜₚ / r) ^ eʳ * Δz[1, 1, 1]/2)
+    push!(∫Chlᵇ, ∫Chlᵇ[1] + (Pᵢ(0, 0, zc[2]) * Rᶜₚ / r) ^ eᵇ * Δz[1, 1, 1]/2 + (Pᵢ(0, 0, zc[1]) * Rᶜₚ / r) ^ eᵇ * Δz[1, 1, 1]/2)
 
     expected_PAR = 100.0 .* [exp(zc[2] * kʳ - ∫Chlʳ[1] * χʳ) + exp(zc[2] * kᵇ - ∫Chlᵇ[1] * χᵇ),
                              exp(zc[1] * kʳ - ∫Chlʳ[2] * χʳ) + exp(zc[1] * kᵇ - ∫Chlᵇ[2] * χᵇ)] ./ 2

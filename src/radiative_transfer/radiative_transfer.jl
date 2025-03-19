@@ -17,8 +17,6 @@ using Oceananigans.Forcings: Forcing
 using Oceananigans.Grids: node, znode, Center, Face
 using Oceananigans.Utils: launch!
 
-using KernelAbstractions.Extras: @unroll
-
 using Walrus: normalise_surface_function, get_value
 
 import Oceananigans.Biogeochemistry: update_biogeochemical_state!, update_tendencies!, AbstractBiogeochemistry

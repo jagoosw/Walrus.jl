@@ -61,7 +61,7 @@ julia> model = NonhydrostaticModel(; grid, forcing = (; T = Forcing(body_heating
 NonhydrostaticModel{CPU, RectilinearGrid}(time = 0 seconds, iteration = 0)
 ├── grid: 128×128×128 RectilinearGrid{Float64, Oceananigans.Grids.Periodic, Oceananigans.Grids.Periodic, Oceananigans.Grids.Bounded} on Oceananigans.Architectures.CPU with 3×3×3 halo
 ├── timestepper: RungeKutta3TimeStepper
-├── advection scheme: Centered reconstruction order 2
+├── advection scheme: Centered(order=2)
 ├── tracers: T
 ├── closure: Nothing
 ├── buoyancy: Nothing
@@ -92,7 +92,7 @@ end
 
     zᶠ⁺ = znode(i, j, k + 1, grid, Center(), Center(), Face())
 
-    return α * get_value(heating.surface_flux, i, j, grid, clock) * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) / (ρ * cₚ) / (zᶠ⁺ - zᶠ)
+    return get_value(heating.surface_flux, i, j, grid, clock) * (exp(- α * abs(zᶠ⁺)) - exp(- α * abs(zᶠ))) / (ρ * cₚ) / (zᶠ⁺ - zᶠ)
 end
 
 
