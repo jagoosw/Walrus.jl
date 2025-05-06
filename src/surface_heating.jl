@@ -272,8 +272,6 @@ end
     ρʷ  = interface.water_density
     cₚʷ = interface.water_specific_heat_capacity
 
-    t = clock.time
-
     u = @inbounds model_fields.u[i, j, grid.Nz]
     v = @inbounds model_fields.v[i, j, grid.Nz]
     T = @inbounds model_fields.T[i, j, grid.Nz]
@@ -353,7 +351,7 @@ end
     eₛ = water_vapour_pressure(q′, T)
     RH = 100 * e / eₛ
 
-    return ((a + b * √e) * (1 - α * N^β) + γ * N^δ * RH^ζ) * σ * (T+273.15)^4
+    return ((a + b * √e) * (1 - α * N^β) + γ * N^δ * RH^ζ) * σ * (T + 273.15)^4
 end
 
 end # module
