@@ -155,6 +155,7 @@ function SurfaceHeatExchange(; wind_stress,
                                downwelling_longwave = EmpiricalDownwellingLongwave()) # W
             
     air_temperature = normalise_surface_function(air_temperature)
+    air_water_mixing_ratio = normalise_surface_function(air_water_mixing_ratio)
 
     return SurfaceHeatExchange(wind_stress, air_temperature,
                                latent_heat_vaporisation, vapour_pressure,
@@ -266,7 +267,7 @@ end
     σ   = interface.stephan_boltzman_constant
     ρᵃ  = interface.air_density
     cₚᵃ = interface.air_specific_heat_capacity
-    qₐ  = interface.air_water_mixing_ratio
+    qₐ  = get_value(interface.air_water_mixing_ratio, i, j, grid, clock)
     ϵ   = interface.ocean_emissivity
 
     ρʷ  = interface.water_density
@@ -341,7 +342,7 @@ end
 
     σ = interface.stephan_boltzman_constant
 
-    q  = interface.air_water_mixing_ratio
+    q  =  get_value(interface.air_water_mixing_ratio, i, j, grid, clock)
     q′ = interface.vapour_pressure
 
     e = q *  q′.p / (q′.a + (1 - q′.a) * q)
