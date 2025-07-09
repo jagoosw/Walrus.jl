@@ -105,14 +105,14 @@ end
     ω = @inbounds 2π / tide.period[n]
 
     return @inbounds - (tide.x_amplitude[n] * ω * sin(ω * t - tide.x_offset[n]) +
-                        tide.y_amplitude[n] * ω * cos(ω * t - tide.y_offset[n]))
+                        tide.y_amplitude[n] * f * cos(ω * t - tide.y_offset[n]))
 end
 
 @inline function y_tide_compoent(tide, t, f, n) 
     ω = @inbounds 2π / tide.period[n]
 
     return @inbounds - (tide.y_amplitude[n] * ω * sin(ω * t - tide.y_offset[n]) -
-                        tide.x_amplitude[n] * ω * cos(ω * t - tide.x_offset[n]))
+                        tide.x_amplitude[n] * f * cos(ω * t - tide.x_offset[n]))
 end
 
 function (tide::Tide{<:NTuple{N}})(i, j, k, grid, clock, model_fields, ::Val{:x}) where N
