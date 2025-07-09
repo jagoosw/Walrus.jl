@@ -6,7 +6,7 @@ export WallStress, WallStressBoundaryConditions
 
 export HomogeneousBodyHeating, PARModelHeating
 
-export Tide, TidalForcing
+export Tide, Tides
 
 export WindStress, WindStressBoundaryConditions, LogarithmicNeutralWind
 
@@ -30,7 +30,7 @@ include("wind_driven_stokes.jl")
 using .Interpolations
 using .WallStressModel
 using .RadiativeTransfer
-using .TidalForcings
+using .TidalForcing
 using .WindStressModel
 using .SurfaceHeatingModel
 using .WindDrivenStokesParameterisation
