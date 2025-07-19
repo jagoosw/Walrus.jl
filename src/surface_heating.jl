@@ -14,7 +14,7 @@ using Walrus.WindStressModel: WindStress,
 
 import Adapt: adapt_structure
 
-struct SurfaceHeatExchange{WS, AT, LH, VP, FT, DL} <: Function
+struct SurfaceHeatExchange{WS, AT, LH, VP, FT, AR, OE, DL} <: Function
                    wind_stress :: WS
                air_temperature :: AT
       latent_heat_vaporisation :: LH
@@ -23,9 +23,9 @@ struct SurfaceHeatExchange{WS, AT, LH, VP, FT, DL} <: Function
                  water_density :: FT
     air_specific_heat_capacity :: FT
                    air_density :: FT
-        air_water_mixing_ratio :: FT
+        air_water_mixing_ratio :: AR
      stephan_boltzman_constant :: FT
-              ocean_emissivity :: FT
+              ocean_emissivity :: OE
           downwelling_longwave :: DL
 end
 
