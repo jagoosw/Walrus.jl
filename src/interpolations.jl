@@ -26,7 +26,6 @@ function SimpleInterpolation(range::Array, values; arch = CPU())
     return SimpleInterpolation((; x₀, Δx), on_architecture(arch, values))
 end
 
-
 function (itp::SimpleInterpolation)(x)
     n₁ = floor(Int, (x - itp.range.x₀) / itp.range.Δx)
 
@@ -38,5 +37,7 @@ function (itp::SimpleInterpolation)(x)
 
     return y₁ + (x - x₁) * (y₂ - y₁) / (x₂ - x₁)
 end
+
+@inline (itp::SimpleInterpolation)(x, y, t) = itp(t) # maybe I shouldn't include this method
 
 end # module
