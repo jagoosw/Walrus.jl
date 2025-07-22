@@ -328,6 +328,9 @@ struct EmpiricalDownwellingLongwave{FT, CF} # Brunt, 1932 / Yang et al., 2023 At
 
         return new{FT, CF}(a, b, α, β, γ, δ, ζ, cloud_fraction)
     end
+
+  EmpiricalDownwellingLongwave(a::FT, b::FT, α::FT, β::FT, γ::FT, δ::FT, ζ::FT, cloud_fraction::CF) where {FT, CF} =
+      new{FT, CF}(a, b, α, β, γ, δ, ζ, cloud_fraction)
 end
 
 adapt_structure(to, ed::EmpiricalDownwellingLongwave) = 
