@@ -330,6 +330,17 @@ struct EmpiricalDownwellingLongwave{FT, CF} # Brunt, 1932 / Yang et al., 2023 At
     end
 end
 
+adapt_structure(to, ed::EmpiricalDownwellingLongwave) = 
+  EmpiricalDownwellingLongwave(adapt(to, ed.a),
+                               adapt(to, ed.b),
+                               adapt(to, ed.α),
+                               adapt(to, ed.β),
+                               adapt(to, ed.γ),
+                               adapt(to, ed.δ),
+                               adapt(to, ed.ζ), 
+                               adapt(to, ed.cloud_fraction))
+  
+
 @inline function (ed::EmpiricalDownwellingLongwave)(i, j, grid, clock, T, interface)
     a = ed.a
     b = ed.b
