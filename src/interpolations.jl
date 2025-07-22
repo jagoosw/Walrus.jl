@@ -8,7 +8,7 @@ using Oceananigans.Architectures: on_architecture, CPU
 
 import Adapt: adapt_structure
 
-struct SimpleInterpolation{R, V}
+struct SimpleInterpolation{R, V} <: Function
      range :: R
     values :: V
 end
