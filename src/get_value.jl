@@ -8,6 +8,9 @@ struct ContinuousSurfaceFunction{F}
     func :: F
 end
 
+adapt_structure(to, csf::ContinuousSurfaceFunction) = 
+    ContinuousSurfaceFunction(adapt(to, csf.func))
+
 @inline function get_value(f::ContinuousSurfaceFunction, i, j, grid, clock, args...)
     t = clock.time
 
@@ -22,6 +25,9 @@ end
 struct DiscreteSurfaceFuncton{F}
     func :: F
 end
+
+adapt_structure(to, csf::DiscreteSurfaceFuncton) = 
+    DiscreteSurfaceFuncton(adapt(to, csf.func))
 
 @inline get_value(f::DiscreteSurfaceFuncton, i, j, grid, clock, args...) = f.func(i, j, grid, clock, args...)
 

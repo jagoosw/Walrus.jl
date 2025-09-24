@@ -1,76 +1,53 @@
-"""
-TidalForcing
+module TidalForcing
 
-Provides quick setup of tidal forcing
-"""
-module TidalForcings
+export Tide, Tides, M2Tide
 
-export Tide, TidalForcing
-
-using Adapt: adapt
-using Oceananigans.Coriolis: fᶠᶠᵃ, AbstractRotation
+using Adapt
 using Oceananigans.Forcings: Forcing
+using Oceananigans.Coriolis: fᶠᶠᵃ, AbstractRotation
 using Oceananigans.Units: hours
 
 import Adapt: adapt_structure
 
-"""
-    Tide(; x_amplitude, 
-           y_amplitude, 
-           period = 12.3782216453hours,
-           nodal_time = 0., 
-           x_lag = 0., 
-           y_lag = 0.,
-           coriolis = nothing)
-
-Sets up a model of tidal forcing with default parameters of an M2 tide.
-
-Keyword Arguments
-=================
-- `x_amplitude`: the tidal amplitude in the x direction
-- `y_amplitude`: the tidal amplitude in the x direction
-- `period`: the tidal period (defaults to that of an M2 tide)
-- `nodal_time`: the time at which peak flow occurs
-- `x_lag`: the phase lag for the tidal component in the x direction
-- `y_lag`: the phase lag for the tidal component in the y direction
-- `coriolis`: a model for the coriolis parameter 
-
-Example
-=======
-
-```jldoctest
-julia> using Walrus: Tide
-
-julia> using Oceananigans
-
-julia> tide = Tide(x_amplitude = 0.1, y_amplitude = 0.)
-(::Tide{Float64, Nothing}) (generic function with 2 methods)
-julia> forcing = (u = Forcing(tide, parameters = Val(:x), discrete_form = true),
-                  v = Forcing(tide, parameters = Val(:y), discrete_form = true))
-(u = DiscreteForcing{Val{:x}}
-├── func: (::Tide{Float64, Nothing}) (generic function with 2 methods)
-└── parameters: Val{:x}(), v = DiscreteForcing{Val{:y}}
-├── func: (::Tide{Float64, Nothing}) (generic function with 2 methods)
-└── parameters: Val{:y}())
-```
-"""
-@kwdef struct Tide{FT, C} <: Function
-    x_amplitude :: FT
+struct Tide{FT, CO} <: Function
+    x_amplitude :: FT 
     y_amplitude :: FT
-         period :: FT = 12.3782216453hours
-     nodal_time :: FT = 0.
-          x_lag :: FT = 0.
-          y_lag :: FT = 0.
-       coriolis :: C  = nothing
+
+       x_offset :: FT
+       y_offset :: FT
+
+         period :: FT
+
+       coriolis :: CO
 end
 
-adapt_structure(to, t::Tide) = Tide(t.x_amplitude,
-                                    t.y_amplitude,
-                                    t.period,
-                                    t.nodal_time,
-                                    t.x_lag,
-                                    t.y_lag,
-                                    adapt(to, t.coriolis))
+Adapt.adapt_structure(to, tide::Tide) =  
+    Tide(adapt(to, tide.x_amplitude),
+         adapt(to, tide.y_amplitude),
+         adapt(to, tide.x_offset),
+         adapt(to, tide.y_offset),
+         adapt(to, tide.period),
+         adapt(to, tide.coriolis))
+
+function Tides(x_amplitude, y_amplitude, x_offset, y_offset, period, coriolis)
+    tide = Tide(x_amplitude, y_amplitude, x_offset, y_offset, period, coriolis)
+
+    x = Forcing(tide, discrete_form = true, parameters = Val(:x))
+    y = Forcing(tide, discrete_form = true, parameters = Val(:y))
+
+    return (; x, y)
+end
+
+function M2Tide(Ax, Ay; x_offset = 0.0, y_offset = 0.0, period = 12.4206012hours, coriolis)
+    tide = Tide(Ax, Ay, x_offset, y_offset, period, coriolis)
+
+    x = Forcing(tide, discrete_form = true, parameters = Val(:x))
+    y = Forcing(tide, discrete_form = true, parameters = Val(:y))
+
+    return (; x, y)
+end
+
+# single component
 
 function (tide::Tide)(i, j, k, grid, clock, model_fields, ::Val{:x})
     f = fᶠᶠᵃ(i, j, k, grid, tide.coriolis)
@@ -78,8 +55,8 @@ function (tide::Tide)(i, j, k, grid, clock, model_fields, ::Val{:x})
     ω = 2π / tide.period
     t = clock.time
 
-    return - (tide.x_amplitude * ω * sin(ω * (t - tide.nodal_time) - tide.x_lag)
-              + tide.y_amplitude * f * sin(ω * (t - tide.nodal_time) - tide.y_lag))
+    return - (tide.x_amplitude * ω * sin(ω * t - tide.x_offset)
+            + tide.y_amplitude * f * cos(ω * t - tide.y_offset))
 end
 
 function (tide::Tide)(i, j, k, grid, clock, model_fields, ::Val{:y})
@@ -88,59 +65,70 @@ function (tide::Tide)(i, j, k, grid, clock, model_fields, ::Val{:y})
     ω = 2π / tide.period
     t = clock.time
 
-    return - (tide.y_amplitude * ω * sin(ω * (t - tide.nodal_time) - tide.y_lag)
-              - tide.x_amplitude * f * sin(ω * (t - tide.nodal_time) - tide.x_lag))
+    return - (tide.y_amplitude * ω * sin(ω * t - tide.y_offset)
+            - tide.x_amplitude * f * cos(ω * t - tide.x_offset))
 end
 
-"""
-    TidalForcing(; x_amplitude,
-                   y_amplitude,
-                   period = 12.3782216453hours,
-                   nodal_time = 0.,
-                   x_lag = 0.,
-                   y_lag = 0.,
-                   coriolis = nothing)
+# 2 components
+function (tide::Tide{<:NTuple{2}})(i, j, k, grid, clock, model_fields, ::Val{:x})
+    f = fᶠᶠᵃ(i, j, k, grid, tide.coriolis)
 
-A convenience constructor for `Tide` which returns the forcings pre wrapped.
+    ω₁ = @inbounds 2π / tide.period[1]
+    ω₂ = @inbounds 2π / tide.period[2]
 
+    t = clock.time
 
-Keyword Arguments
-=================
-- `x_amplitude`: the tidal amplitude in the x direction
-- `y_amplitude`: the tidal amplitude in the x direction
-- `period`: the tidal period (defaults to that of an M2 tide)
-- `nodal_time`: the time at which peak flow occurs
-- `x_lag`: the phase lag for the tidal component in the x direction
-- `y_lag`: the phase lag for the tidal component in the y direction
-- `coriolis`: a model for the coriolis parameter 
+    T₁ = @inbounds - (tide.x_amplitude[1] * ω₁ * sin(ω₁ * t - tide.x_offset[1]) + 
+                      tide.y_amplitude[1] * f * cos(ω₁ * t - tide.y_offset[1]))
+    T₂ = @inbounds - (tide.x_amplitude[2] * ω₂ * sin(ω₂ * t - tide.x_offset[2]) + 
+                      tide.y_amplitude[2] * f * cos(ω₂ * t - tide.y_offset[2]))
 
-Example
-=======
-
-```jldoctest
-julia> using Walrus: TidalForcing
-
-julia> tidal_forcing = TidalForcing(x_amplitude = 0.1, y_amplitude = 0.)
-(u = DiscreteForcing{Val{:x}}
-├── func: (::Tide{Float64, Nothing}) (generic function with 2 methods)
-└── parameters: Val{:x}(), v = DiscreteForcing{Val{:y}}
-├── func: (::Tide{Float64, Nothing}) (generic function with 2 methods)
-└── parameters: Val{:y}())
-```
-"""
-function TidalForcing(; x_amplitude,
-                        y_amplitude,
-                        period = 12.3782216453hours,
-                        nodal_time = 0.,
-                        x_lag = 0.,
-                        y_lag = 0.,
-                        coriolis = nothing)
-
-    tide = Tide(x_amplitude, y_amplitude,
-                period, nodal_time,
-                x_lag, y_lag, coriolis)
-
-    return (u = Forcing(tide, parameters = Val(:x), discrete_form = true),
-            v = Forcing(tide, parameters = Val(:y), discrete_form = true))
+    return T₁ + T₂
 end
+
+function (tide::Tide{<:NTuple{2}})(i, j, k, grid, clock, model_fields, ::Val{:y})
+    f = fᶠᶠᵃ(i, j, k, grid, tide.coriolis)
+
+    ω₁ = @inbounds 2π / tide.period[1]
+    ω₂ = @inbounds 2π / tide.period[2]
+
+    t = clock.time
+
+    T₁ = @inbounds - (tide.y_amplitude[1] * ω₁ * sin(ω₁ * t - tide.y_offset[1]) - tide.x_amplitude[1] * f * cos(ω₁ * t - tide.x_offset[1]))
+    T₂ = @inbounds - (tide.y_amplitude[2] * ω₂ * sin(ω₂ * t - tide.y_offset[2]) - tide.x_amplitude[2] * f * cos(ω₂ * t - tide.x_offset[2]))
+
+    return T₁ + T₂
+end
+
+# n-component
+@inline function x_tide_compoent(tide, t, f, n) 
+    ω = @inbounds 2π / tide.period[n]
+
+    return @inbounds - (tide.x_amplitude[n] * ω * sin(ω * t - tide.x_offset[n]) +
+                        tide.y_amplitude[n] * f * cos(ω * t - tide.y_offset[n]))
+end
+
+@inline function y_tide_compoent(tide, t, f, n) 
+    ω = @inbounds 2π / tide.period[n]
+
+    return @inbounds - (tide.y_amplitude[n] * ω * sin(ω * t - tide.y_offset[n]) -
+                        tide.x_amplitude[n] * f * cos(ω * t - tide.x_offset[n]))
+end
+
+function (tide::Tide{<:NTuple{N}})(i, j, k, grid, clock, model_fields, ::Val{:x}) where N
+    f = fᶠᶠᵃ(i, j, k, grid, tide.coriolis)
+
+    t = clock.time
+
+    return sum(ntuple(n -> x_tide_compoent(tide, t, f, n), Val(N)))
+end
+
+function (tide::Tide{<:NTuple{N}})(i, j, k, grid, clock, model_fields, ::Val{:y}) where N
+    f = fᶠᶠᵃ(i, j, k, grid, tide.coriolis)
+
+    t = clock.time
+
+    return sum(ntuple(n -> x_tide_compoent(tide, t, f, n), Val(N)))
+end
+
 end # module

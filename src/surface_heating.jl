@@ -14,7 +14,7 @@ using Walrus.WindStressModel: WindStress,
 
 import Adapt: adapt_structure
 
-struct SurfaceHeatExchange{WS, AT, LH, VP, FT, DL} <: Function
+struct SurfaceHeatExchange{WS, AT, LH, VP, FT, AR, OE, DL} <: Function
                    wind_stress :: WS
                air_temperature :: AT
       latent_heat_vaporisation :: LH
@@ -23,9 +23,9 @@ struct SurfaceHeatExchange{WS, AT, LH, VP, FT, DL} <: Function
                  water_density :: FT
     air_specific_heat_capacity :: FT
                    air_density :: FT
-        air_water_mixing_ratio :: FT
+        air_water_mixing_ratio :: AR
      stephan_boltzman_constant :: FT
-              ocean_emissivity :: FT
+              ocean_emissivity :: OE
           downwelling_longwave :: DL
 end
 
@@ -127,7 +127,7 @@ julia> wind_stress = WindStress(; reference_wind_speed = 0., reference_wind_dire
 (::WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}) (generic function with 2 methods)
 
 julia> surface_heat_exchange = SurfaceHeatExchange(; wind_stress)
-(::SurfaceHeatExchange{WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}, Int64, Walrus.SurfaceHeatingModel.EmpiricalLatentHeatVaporisation{Float64}, Walrus.SurfaceHeatingModel.AugustRocheMagnusVapourPressure{Float64}, Float64, Walrus.SurfaceHeatingModel.EmpiricalDownwellingLongwave{Float64, Float64}}) (generic function with 1 method)
+(::SurfaceHeatExchange{WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}, Int64, Walrus.SurfaceHeatingModel.EmpiricalLatentHeatVaporisation{Float64}, Walrus.SurfaceHeatingModel.AugustRocheMagnusVapourPressure{Float64}, Float64, Float64, Float64, Walrus.SurfaceHeatingModel.EmpiricalDownwellingLongwave{Float64, Float64}}) (generic function with 1 method)
 
 julia> boundary_conditions = (; T = FieldBoundaryConditions(top = FluxBoundaryCondition(surface_heat_exchange, field_dependencies = (:T, :u, :v))))
 (T = Oceananigans.FieldBoundaryConditions, with boundary conditions
@@ -136,7 +136,7 @@ julia> boundary_conditions = (; T = FieldBoundaryConditions(top = FluxBoundaryCo
 ├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
 ├── bottom: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
-├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::SurfaceHeatExchange{WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}, Int64, Walrus.SurfaceHeatingModel.EmpiricalLatentHeatVaporisation{Float64}, Walrus.SurfaceHeatingModel.AugustRocheMagnusVapourPressure{Float64}, Float64, Walrus.SurfaceHeatingModel.EmpiricalDownwellingLongwave{Float64, Float64}}) at (Nothing, Nothing, Nothing)
+├── top: FluxBoundaryCondition: ContinuousBoundaryFunction (::SurfaceHeatExchange{WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}, Int64, Walrus.SurfaceHeatingModel.EmpiricalLatentHeatVaporisation{Float64}, Walrus.SurfaceHeatingModel.AugustRocheMagnusVapourPressure{Float64}, Float64, Float64, Float64, Walrus.SurfaceHeatingModel.EmpiricalDownwellingLongwave{Float64, Float64}}) at (Nothing, Nothing, Nothing)
 └── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing),)
 
 ```
@@ -155,6 +155,7 @@ function SurfaceHeatExchange(; wind_stress,
                                downwelling_longwave = EmpiricalDownwellingLongwave()) # W
             
     air_temperature = normalise_surface_function(air_temperature)
+    air_water_mixing_ratio = normalise_surface_function(air_water_mixing_ratio)
 
     return SurfaceHeatExchange(wind_stress, air_temperature,
                                latent_heat_vaporisation, vapour_pressure,
@@ -201,7 +202,7 @@ julia> wind_stress = WindStress(; reference_wind_speed = 0., reference_wind_dire
 (::WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}) (generic function with 2 methods)
 
 julia> surface_heat_exchange = SurfaceHeatExchangeBoundaryCondition(; wind_stress)
-FluxBoundaryCondition: DiscreteBoundaryFunction with (::SurfaceHeatExchange{WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}, Int64, Walrus.SurfaceHeatingModel.EmpiricalLatentHeatVaporisation{Float64}, Walrus.SurfaceHeatingModel.AugustRocheMagnusVapourPressure{Float64}, Float64, Walrus.SurfaceHeatingModel.EmpiricalDownwellingLongwave{Float64, Float64}})
+FluxBoundaryCondition: DiscreteBoundaryFunction with (::SurfaceHeatExchange{WindStress{Float64, Float64, LogarithmicNeutralWind{Float64, Nothing}, Float64}, Int64, Walrus.SurfaceHeatingModel.EmpiricalLatentHeatVaporisation{Float64}, Walrus.SurfaceHeatingModel.AugustRocheMagnusVapourPressure{Float64}, Float64, Float64, Float64, Walrus.SurfaceHeatingModel.EmpiricalDownwellingLongwave{Float64, Float64}})
 
 ```
 """
@@ -266,7 +267,7 @@ end
     σ   = interface.stephan_boltzman_constant
     ρᵃ  = interface.air_density
     cₚᵃ = interface.air_specific_heat_capacity
-    qₐ  = interface.air_water_mixing_ratio
+    qₐ  = get_value(interface.air_water_mixing_ratio, i, j, grid, clock)
     ϵ   = interface.ocean_emissivity
 
     ρʷ  = interface.water_density
@@ -327,7 +328,21 @@ struct EmpiricalDownwellingLongwave{FT, CF} # Brunt, 1932 / Yang et al., 2023 At
 
         return new{FT, CF}(a, b, α, β, γ, δ, ζ, cloud_fraction)
     end
+
+  EmpiricalDownwellingLongwave(a::FT, b::FT, α::FT, β::FT, γ::FT, δ::FT, ζ::FT, cloud_fraction::CF) where {FT, CF} =
+      new{FT, CF}(a, b, α, β, γ, δ, ζ, cloud_fraction)
 end
+
+adapt_structure(to, ed::EmpiricalDownwellingLongwave) = 
+  EmpiricalDownwellingLongwave(adapt(to, ed.a),
+                               adapt(to, ed.b),
+                               adapt(to, ed.α),
+                               adapt(to, ed.β),
+                               adapt(to, ed.γ),
+                               adapt(to, ed.δ),
+                               adapt(to, ed.ζ), 
+                               adapt(to, ed.cloud_fraction))
+  
 
 @inline function (ed::EmpiricalDownwellingLongwave)(i, j, grid, clock, T, interface)
     a = ed.a
@@ -341,7 +356,7 @@ end
 
     σ = interface.stephan_boltzman_constant
 
-    q  = interface.air_water_mixing_ratio
+    q  = get_value(interface.air_water_mixing_ratio, i, j, grid, clock)
     q′ = interface.vapour_pressure
 
     e = q *  q′.p / (q′.a + (1 - q′.a) * q)
