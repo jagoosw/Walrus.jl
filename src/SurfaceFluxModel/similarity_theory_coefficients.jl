@@ -1,4 +1,4 @@
-using NonlinearSolve, SciMLBase, StaticArrays, Adapt
+using Adapt
 
 using Oceananigans.BuoyancyFormulations: g_Earth
 
