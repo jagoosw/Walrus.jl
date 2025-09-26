@@ -29,7 +29,7 @@ end
 adapt_structure(to, dc::SimilarityTheoryInterface) = 
     SimilarityTheoryInterface(dc.von_karman_constant, dc.gravity_acceleration, dc.reference_height,
                               adapt(to, dc.virtual_temperature), adapt(to, dc.virtual_potential_temperature),
-                              adapt(to, dc.stability_parameterisation), adapt(to, dc.roughness_length))
+                              adapt(to, dc.stability_formulation), adapt(to, dc.roughness_length))
 
 @inline function itterate_scaling_values(interface, previous_values, p)
     FT = typeof(interface.T)
