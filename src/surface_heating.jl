@@ -9,8 +9,7 @@ using Adapt: adapt
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition
 
 using Walrus: get_value, normalise_surface_function
-using Walrus.WindStressModel: WindStress, 
-                              LogarithmicNeutralWind
+using Walrus.InterfaceCoefficients: SimilarityTheoryInterface
 
 import Adapt: adapt_structure
 
@@ -210,27 +209,6 @@ function SurfaceHeatExchangeBoundaryCondition(; wind_stress, kwargs...)
     surface_heat_exchange = SurfaceHeatExchange(; wind_stress, kwargs...)
 
     return FluxBoundaryCondition(surface_heat_exchange, discrete_form=true)
-end
-
-@inline function Cʰ(drag_coefficient::LogarithmicNeutralWind, wind_speed)
-    κ  = drag_coefficient.monin_obukhov_stability_length
-    ν  = drag_coefficient.air_kinematic_viscosity
-    ac = drag_coefficient.charnock_coefficient
-    α  = drag_coefficient.gravity_wave_coefficient
-    g  = drag_coefficient.gravity_acceleration
-    Cd = drag_coefficient(wind_speed)
-
-    u′ = √(Cd) * wind_speed
-
-    z₀ = ac * u′^2 / g + α * ν / u′
-
-    Rᵣ = u′ * z₀ / ν
-
-    zₒₜ = min(1.15e-4, 5.5e-5 * Rᵣ ^ -0.6)
-
-    result = κ^2  / (log(2/zₒₜ) * log(2/z₀))
-  
-    return ifelse(isfinite(result), result, 0)
 end
 
 # parameterisation for vapour pressure with default coefficients from [alduchov1996](@citet).

@@ -1,7 +1,13 @@
 using Oceananigans.Biogeochemistry: AbstractContinuousFormBiogeochemistry
 import Oceananigans.Biogeochemistry: required_biogeochemical_tracers
 
-using Walrus.SurfaceHeatingModel: EmpiricalDownwellingLongwave, AugustRocheMagnusVapourPressure
+using Walrus.RadiativeTransfer: HomogeneousBodyHeating, PARModelHeating
+using Walrus.SurfaceFluxModel: OceanAtmosphereBoundaryConditions, 
+                               PrescribedAtmosphericState, 
+                               EmpiricalDownwellingLongwave,
+                               AugustRocheMagnusVapourPressure,
+                               heat_exchange_coefficient,
+                               SimilarityTheoryInterface
 
 struct JustPhytoplankton <: AbstractContinuousFormBiogeochemistry end
 required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
@@ -26,26 +32,25 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     # Density and specific head are 1 so the water should have increased in temp by ~6.3212 K
     @test Array(interior(model.tracers.T, 1, 1, 10))[1] ≈ 10 * (1 - exp(-1))
 
-    # TODO: change this test so it is actually correct when spacing is not 1 in all dimensions - dw I checked it is (23/8/24)
-
     #####
     ##### Test radiative heating/cooling (no sensible or latent flux)
     #####
 
-    wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 0., reference_wind_direction = 90.)
+    atmosphere = PrescribedAtmosphericState(wind_speed = 0.0, wind_direction = 90.0, 
+                                            temperature = -272.15, 
+                                            downwelling_longwave = EmpiricalDownwellingLongwave(; b = 0.0, a = 1.0, α = 0.0, γ = 0.0))
 
-    surface_heat_exchange = SurfaceHeatExchangeBoundaryCondition(; wind_stress = wind_stress_boundary_conditions.u.condition.func,
-                                                                   air_temperature = -272.15,
-                                                                   air_density = 0.0,
-                                                                   stephan_boltzman_constant = 1.0,
-                                                                   water_density = 1.0,
-                                                                   water_specific_heat_capacity = 1.0,
-                                                                   downwelling_longwave = EmpiricalDownwellingLongwave(; b = 0.0, a = 1.0, α = 0.0, γ = 0.0))
+    U, V, Q = OceanAtmosphereBoundaryConditions(atmosphere; 
+                                                stephan_boltzman_constant = 1.0, 
+                                                air_reference_density = 0.0, 
+                                                water_reference_density = 1.0, 
+                                                water_specific_heat_capacity = 1.0,
+                                                ocean_emissivity = 0.0)
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
                                   timestepper = :QuasiAdamsBashforth2,
-                                  boundary_conditions = (; T = FieldBoundaryConditions(top = surface_heat_exchange)))
+                                  boundary_conditions = (; T = FieldBoundaryConditions(top = Q)))
 
     set!(model, T = -273.15)
     
@@ -58,25 +63,24 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     ##### Test sensible flux
     #####
 
-    wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 0., reference_wind_direction = 90.)
-
-    surface_heat_exchange = SurfaceHeatExchangeBoundaryCondition(; wind_stress = wind_stress_boundary_conditions.u.condition.func,
-                                                                   air_temperature = -272.15,
-                                                                   air_density = 1.0,
-                                                                   air_specific_heat_capacity = 1.0,
-                                                                   stephan_boltzman_constant = 0.0,
-                                                                   water_density = 1.0,
-                                                                   water_specific_heat_capacity = 1.0,
-                                                                   latent_heat_vaporisation = (args...)->0)
+    U, V, Q = OceanAtmosphereBoundaryConditions(atmosphere; 
+                                                stephan_boltzman_constant = 0.0, 
+                                                air_reference_density = 1.0, 
+                                                water_reference_density = 1.0, 
+                                                water_specific_heat_capacity = 1.0,
+                                                air_specific_heat_capacity = 1.0,
+                                                latent_heat_vaporisation = (args...) -> 0)
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
                                   timestepper = :QuasiAdamsBashforth2,
-                                  boundary_conditions = (; T = FieldBoundaryConditions(top = surface_heat_exchange)))
+                                  boundary_conditions = (; T = FieldBoundaryConditions(top = Q)))
 
     set!(model, T = -273.15, u = 1)
+
+    Ch = heat_exchange_coefficient(Q.condition.func.interface_coefficients, 1, 1, grid, clock, fields(model), atmosphere)
     
-    time_step!(model, 1/0.0015504244655092465) # 1/Cʰ at U = 1m/s
+    time_step!(model, 1/Ch) # 1/Cʰ at U = 1m/s
 
     @test Array(interior(model.tracers.T, 1, 1, 10))[1] ≈ -272.15
 
@@ -85,21 +89,22 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     ##### so we will just check it works, then do a budget test after
     #####
 
-    wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 1., reference_wind_direction = 90.)
+    atmosphere = PrescribedAtmosphericState(wind_speed = 1.0, wind_direction = 90.0, 
+                                            temperature = 0.0, 
+                                            downwelling_longwave = EmpiricalDownwellingLongwave(; b = 0.0, a = 1.0, α = 0.0, γ = 0.0))
 
-    surface_heat_exchange = SurfaceHeatExchangeBoundaryCondition(; wind_stress = wind_stress_boundary_conditions.u.condition.func,
-                                                                   air_temperature = 0,
-                                                                   air_density = 1.,
-                                                                   air_specific_heat_capacity = 1.,
-                                                                   stephan_boltzman_constant = 0.,
-                                                                   water_density = 1.,
-                                                                   water_specific_heat_capacity = 1.,
-                                                                   latent_heat_vaporisation = (T) -> 0)
+    U, V, Q = OceanAtmosphereBoundaryConditions(atmosphere; 
+                                                stephan_boltzman_constant=0.0, 
+                                                air_reference_density = 1.0, 
+                                                water_reference_density = 1.0, 
+                                                water_specific_heat_capacity = 1.0,
+                                                air_specific_heat_capacity = 1.0,
+                                                latent_heat_vaporisation = (args...) -> 0)
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
                                   timestepper = :QuasiAdamsBashforth2,
-                                  boundary_conditions = (; T = FieldBoundaryConditions(top = surface_heat_exchange)))
+                                  boundary_conditions = (; T = FieldBoundaryConditions(top = Q)))
 
     # no heat exchange when temperatures equal
     set!(model, T = 0)
@@ -132,21 +137,22 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     ##### Test latent heating/cooling
     #####
 
-    wind_stress_boundary_conditions = WindStressBoundaryConditions(; reference_wind_speed = 1., reference_wind_direction = 90.)
+    atmosphere = PrescribedAtmosphericState(wind_speed = 1.0, wind_direction = 90.0, 
+                                            temperature = 0.0, 
+                                            downwelling_longwave = EmpiricalDownwellingLongwave(; b = 0.0, a = 1.0, α = 0.0, γ = 0.0),
+                                            air_water_mixing_ratio = AugustRocheMagnusVapourPressure()(0))
 
-    surface_heat_exchange = SurfaceHeatExchangeBoundaryCondition(; wind_stress = wind_stress_boundary_conditions.u.condition.func,
-                                                                   air_temperature = 0,
-                                                                   air_density = 1.,
-                                                                   air_specific_heat_capacity = 0.,
-                                                                   air_water_mixing_ratio = AugustRocheMagnusVapourPressure()(0),
-                                                                   stephan_boltzman_constant = 0.,
-                                                                   water_density = 1.,
-                                                                   water_specific_heat_capacity = 1.)
+    U, V, Q = OceanAtmosphereBoundaryConditions(atmosphere; 
+                                                stephan_boltzman_constant=0.0, 
+                                                air_reference_density = 1.0, 
+                                                water_reference_density = 1.0, 
+                                                water_specific_heat_capacity = 1.0,
+                                                air_specific_heat_capacity = 0.0)
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
                                   timestepper = :QuasiAdamsBashforth2,
-                                  boundary_conditions = (; T = FieldBoundaryConditions(top = surface_heat_exchange)))
+                                  boundary_conditions = (; T = FieldBoundaryConditions(top = Q)))
 
     # no heat exchange when vapour pressure equalised
     set!(model, T = 0)
@@ -225,3 +231,9 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     # high tollerance, I think error is from course grid (hopefully)
     @test CUDA.@allowscalar all(isapprox.(analytical_body_heating, [body_heating(1, 1, k, grid, model.clock, fields(model)) for k = 2:-1:1], atol = 1.5e-6))
 end
+#= TODO:
+@testset "Similarity theory interface coefficients" begin
+    interface = SimilarityTheoryInterface()
+    
+end
+=#

@@ -1,6 +1,6 @@
 module WindStressModel
 
-export WindStress, WindStressBoundaryConditions, LogarithmicNeutralWind
+export WindStress, WindStressBoundaryConditions
 
 using Roots
 
@@ -12,6 +12,7 @@ using Oceananigans.BuoyancyFormulations: g_Earth
 
 using Walrus: get_value, normalise_surface_function
 using Walrus.Interpolations: SimpleInterpolation
+using Walrus.InterfaceCoefficients: SimilarityTheoryInterface
 
 import Adapt: adapt_structure
 import Base: summary, show
@@ -98,7 +99,7 @@ julia> boundary_conditions = (u = FieldBoundaryConditions(top = FluxBoundaryCond
 """
 function WindStress(; reference_wind_speed, 
                       reference_wind_direction,
-                      drag_coefficient = LogarithmicNeutralWind(), 
+                      interface = SimilarityTheoryInterface(), 
                       air_density = 1.225, 
                       water_density = 1026.)
         
@@ -193,7 +194,9 @@ end
 
     relative_speed = √((uʷ - u)^2 + (vʷ - v)^2)
 
-    stress_velocity = ρₐ / ρₒ * wind_stress.drag_coefficient(relative_speed) * relative_speed
+    Cd, _ = wind_stress.drag_coefficient(relative_speed, )
+
+    stress_velocity = ρₐ / ρₒ * Cd * relative_speed
 
     return - stress_velocity * (uʷ - u)
 end
@@ -227,120 +230,5 @@ show(io::IO, wind::WindStress) = println(io, summary(wind), " with:\n",
                                      " Drag coefficient: ", summary(wind.drag_coefficient), "\n",
                                      " Air density: ", wind.air_density, " kg/m³\n",
                                      " Water density: ", wind.water_density, " kg/m³")
-
-struct LogarithmicNeutralWind{FT, CD} # can't think of a good name for this
-  monin_obukhov_stability_length :: FT
-            charnock_coefficient :: FT
-         air_kinematic_viscosity :: FT
-        gravity_wave_coefficient :: FT
-            gravity_acceleration :: FT
-
-                drag_coefficient :: CD
-end
-
-"""
-    LogarithmicNeutralWind(; monin_obukhov_stability_length = 0.4
-                             charnock_coefficient = 0.014
-                             air_kinematic_viscosity = 1.488e-5
-                             gravity_wave_coefficient = 0.11
-                             gravity = g_Earth,
-
-                             precompute_drag_coefficients = false,
-                             precompute_wind_speeds = [0:25/100000:25;],
-                             arch = CPU())
-
-Returns a `LogarithmicNeutralWind` parameterisation for the surface drag coefficient
-
-``C_d`` is parameterised as,
-```math
-C_d = \\left(\\frac{\\kappa}{\\log{\\frac{10}{z_0}}}\\right)^2,
-```
-where ``\\kappa`` is the Monin‐Obukhov stability length and ``z_0`` is the velocity 
-roughness length. This is the roughness length scale which logarithmically brings 
-the relative velocity to zero at the surface, i.e.
-```math
-U=\\frac{u\\star}{\\kappa}\\log\\frac{z}{z_0},
-```
-where ``u\\star`` is the friction velocity. Additionally ``z_0`` is given as,
-```math
-z_0=b\\frac{\\nu}{u\\star} + \\frac{a_c}{g}u\\star^2,
-```
-where ``\\nu`` is the kinematic viscosity of air and g is the acceleration of gravity.
-
-This model itterativly solves these equations to find ``z_0``. Alternativly, if the flag 
-`precomputed_roughness_length` is set to they are pre computed at `precompute_wind_speeds` 
-between which ``z_0`` is then interpolated during run time. Precomputed velocities are 
-converted to appropriate types for `arch` (i.e. `CPU()` or `GPU()`)
-
-This parameterisaion is described in [smith1988](@citet)
-"""
-function LogarithmicNeutralWind(; monin_obukhov_stability_length::FT = 0.4,
-                                  charnock_coefficient::FT = 0.014,
-                                  air_kinematic_viscosity::FT = 1.488e-5,
-                                  gravity_wave_coefficient::FT = 0.11,
-                                  gravity_acceleration::FT = g_Earth,
-
-                                  precompute_drag_coefficients = false,
-                                  precompute_wind_speeds = [0:1e-4:100;],
-                                  arch = CPU()) where FT
-
-    if precompute_drag_coefficients
-        tmp_Cd = LogarithmicNeutralWind(monin_obukhov_stability_length, charnock_coefficient,
-                                        air_kinematic_viscosity, gravity_wave_coefficient, gravity_acceleration,
-                                        nothing)
-
-
-        Cd = tmp_Cd.(precompute_wind_speeds)
-
-        drag_coefficient = SimpleInterpolation(precompute_wind_speeds, Cd; arch)
-    else
-        drag_coefficient = nothing
-    end
-
-    return LogarithmicNeutralWind(monin_obukhov_stability_length, charnock_coefficient,
-                                  air_kinematic_viscosity, gravity_wave_coefficient, gravity_acceleration,
-                                  drag_coefficient)
-end
-
-adapt_structure(to, dc::LogarithmicNeutralWind) = 
-    LogarithmicNeutralWind(dc.monin_obukhov_stability_length, dc.charnock_coefficient,
-                           dc.air_kinematic_viscosity, dc.gravity_wave_coefficient, dc.gravity_acceleration,
-                           adapt(to, dc.drag_coefficient))
-
-@inline function drag_coefficient_excess(Cd, p)
-    κ, ν, α, b, g, u = p
-
-    u = max(0.01, u)
-
-    u′ = √(Cd * u^2)
-
-    z₀ = b * ν / u′ + α * u′^2 / g
-
-    Cd_new = (κ / log(10 / z₀))^2
-
-    return Cd_new - Cd
-end
-
-@inline (dc::LogarithmicNeutralWind)(wind_speed) = dc.drag_coefficient(wind_speed)
-
-@inline function (dc::LogarithmicNeutralWind{<:Any, Nothing})(wind_speed)
-    κ = dc.monin_obukhov_stability_length
-    ν = dc.air_kinematic_viscosity
-    α = dc.charnock_coefficient
-    b = dc.gravity_wave_coefficient
-    g = dc.gravity_acceleration
-
-    p = (; κ, ν, α, b, g, wind_speed)
-    
-    return find_zero(drag_coefficient_excess, (0.0005, 0.02), Bisection(), p)
-end
-
-summary(::LogarithmicNeutralWind) = string("Log neutral wind drag coefficient model")
-show(io::IO, cd::LogarithmicNeutralWind) = println(io, summary(cd), " with:\n",
-                                                  " κ: ",  cd.monin_obukhov_stability_length, "\n",
-                                                  " ν: ",  cd.air_kinematic_viscosity, " m²/s\n",
-                                                  " aᶜ: ", cd.charnock_coefficient, "\n",
-                                                  " g: " , cd.gravity_acceleration, "m/s²\n",
-                                                  " b: ", cd.gravity_wave_coefficient)
 
 end # module
