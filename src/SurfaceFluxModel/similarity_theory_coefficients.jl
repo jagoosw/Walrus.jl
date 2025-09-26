@@ -55,7 +55,7 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
                               nothing)
 
 @inline function itterate_scaling_values!(i, j, u′, T′, U, θ, T, w, zᵤ, zₜ, p)
-    FT = typeof(interface.T)
+    FT = typeof(T)
 
     Tᵥ = p.virtual_temperature(T + FT(273.15), w)
 
@@ -86,7 +86,7 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
     T′₊ = κ * (θᵥ - Tᵥ) / (log(zₜ/zₒₜ) - ψₜ + ψₜₒ)
 
     @inbounds u′[i, j, 1] = ifelse(isinf(zₒ), 0, u′₊)
-    @inbounds T′[i, j, 1] = ifelse(isinf(zₒₜ)|isinf(zₒ), 0, T′₊)
+    @inbounds T′[i, j, 1] = ifelse(isinf(zₒₜ), 0, T′₊)
 
     return nothing
 end
