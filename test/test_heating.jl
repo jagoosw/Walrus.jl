@@ -40,7 +40,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
                                             temperature = -272.15, 
                                             downwelling_longwave = EmpiricalDownwellingLongwave(; b = 0.0, a = 1.0, α = 0.0, γ = 0.0))
 
-    U, V, Q = OceanAtmosphereBoundaryConditions(atmosphere; 
+    U, V, Q = OceanAtmosphereBoundaryConditions(grid, atmosphere; 
                                                 stephan_boltzman_constant = 1.0, 
                                                 air_reference_density = 0.0, 
                                                 water_reference_density = 1.0, 
@@ -63,7 +63,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
     ##### Test sensible flux
     #####
 
-    U, V, Q = OceanAtmosphereBoundaryConditions(atmosphere; 
+    U, V, Q = OceanAtmosphereBoundaryConditions(grid, atmosphere; 
                                                 stephan_boltzman_constant = 0.0, 
                                                 air_reference_density = 1.0, 
                                                 water_reference_density = 1.0, 
@@ -93,7 +93,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
                                             temperature = 0.0, 
                                             downwelling_longwave = EmpiricalDownwellingLongwave(; b = 0.0, a = 1.0, α = 0.0, γ = 0.0))
 
-    U, V, Q = OceanAtmosphereBoundaryConditions(atmosphere; 
+    U, V, Q = OceanAtmosphereBoundaryConditions(grid, atmosphere; 
                                                 stephan_boltzman_constant=0.0, 
                                                 air_reference_density = 1.0, 
                                                 water_reference_density = 1.0, 
@@ -142,7 +142,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
                                             downwelling_longwave = EmpiricalDownwellingLongwave(; b = 0.0, a = 1.0, α = 0.0, γ = 0.0),
                                             air_water_mixing_ratio = AugustRocheMagnusVapourPressure()(0))
 
-    U, V, Q = OceanAtmosphereBoundaryConditions(atmosphere; 
+    U, V, Q = OceanAtmosphereBoundaryConditions(grid, atmosphere; 
                                                 stephan_boltzman_constant=0.0, 
                                                 air_reference_density = 1.0, 
                                                 water_reference_density = 1.0, 
