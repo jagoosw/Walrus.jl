@@ -116,7 +116,7 @@ end
 
 Adapt.adapt_structure(to, vt::VirtualTemperature) =
     VirtualTemperature(adapt(to, vt.air_mixing_ratio),
-                       adapt(tp, vt.mass_ratio))
+                       adapt(to, vt.mass_ratio))
 
 @inline function (vt::VirtualTemperature)(T, w)
     ϵ = vt.mass_ratio
