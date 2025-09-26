@@ -11,6 +11,15 @@ struct PrescribedAtmosphericState{WS, WD, AT, MR, DL, FT}
           temperature_height :: FT
 end
 
+Adapt.adapt_structure(to, atmosphere::PrescribedAtmosphericState) =
+    PrescribedAtmosphericState(adapt(to, atmosphere.wind_speed),
+                               adapt(to, atmosphere.wind_direction),
+                               adapt(to, atmosphere.temperature),
+                               adapt(to, atmosphere.air_water_mixing_ratio),
+                               adapt(to, atmosphere.downwelling_longwave),
+                               atmosphere.wind_height,
+                               atmosphere.temperature_height)
+
 function PrescribedAtmosphericState(; wind_speed, 
                                       wind_direction,
                                       temperature,

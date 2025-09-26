@@ -14,6 +14,18 @@ struct OceanAtmosphereBoundary{IC, AS, WD, AD, WC, AC, VP, LH, FT} <: Function
                 ocean_emissivity :: FT
 end
 
+Adapt.adapt_structure(to, boundary::OceanAtmosphereBoundary) =
+    OceanAtmosphereBoundary(adapt(to, boundary.interface_coefficients),
+                            adapt(to, boundary.atmosphere_state),
+                            adapt(to, boundary.water_reference_density),
+                            adapt(to, boundary.air_reference_density),
+                            adapt(to, boundary.water_specific_heat_capacity),
+                            adapt(to, boundary.air_specific_heat_capacity),
+                            adapt(to, boundary.vapour_pressure),
+                            adapt(to, boundary.latent_heat_vaporisation),
+                            boundary.stephan_boltzman_constant,
+                            boundary.ocean_emissivity)
+
 function OceanAtmosphereBoundaryConditions(atmosphere_state; 
                                            interface_coefficients = SimilarityTheoryInterface(),
                                            water_reference_density = 1026.0, # TODO: make this a function of temperature and salinity

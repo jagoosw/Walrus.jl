@@ -1,8 +1,4 @@
-using Adapt
-
 using Oceananigans.BuoyancyFormulations: g_Earth
-
-import Adapt: adapt_structure
 
 struct SimilarityTheoryInterface{FT, VT, VP, SF, RL} # can't think of a good name for this
              von_karman_constant :: FT

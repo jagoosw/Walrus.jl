@@ -1,5 +1,9 @@
 module SurfaceFluxModel
 
+using Adapt
+
+import Adapt: adapt_structure
+
 include("similarity_theory_coefficients.jl")
 include("prescribed_atmospheric_state.jl")
 include("boundary.jl")
