@@ -67,7 +67,7 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
     u′₋ = @inbounds u′[i, j, 1]
     T′₋ = @inbounds u′[i, j, 1]
 
-    Cₕ = -u′ * T′₋ / (U * (T - θ))
+    Cₕ = -u′₋ * T′₋ / (U * (T - θ))
 
     Cₕ = ifelse(isinf(Cₕ), FT(1e-3), Cₕ)
 
