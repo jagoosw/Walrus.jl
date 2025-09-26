@@ -3,6 +3,7 @@ module SurfaceFluxModel
 using Adapt
 
 import Adapt: adapt_structure
+import Oceananigans.BoundaryConditions: update_boundary_condition!
 
 include("similarity_theory_coefficients.jl")
 include("prescribed_atmospheric_state.jl")

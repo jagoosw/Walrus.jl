@@ -1,4 +1,4 @@
-using Oceananigans.BoundaryConditions: FluxBoundaryCondition
+using Oceananigans.BoundaryConditions: FluxBoundaryCondition, BoundaryCondition, DiscreteBoundaryFunction
 
 struct OceanAtmosphereBoundary{IC, AS, WD, AD, WC, AC, VP, LH, FT} <: Function
           interface_coefficients :: IC
@@ -26,8 +26,8 @@ Adapt.adapt_structure(to, boundary::OceanAtmosphereBoundary) =
                             boundary.stephan_boltzman_constant,
                             boundary.ocean_emissivity)
 
-function OceanAtmosphereBoundaryConditions(atmosphere_state; 
-                                           interface_coefficients = SimilarityTheoryInterface(),
+function OceanAtmosphereBoundaryConditions(grid, atmosphere_state; 
+                                           interface_coefficients = SimilarityTheoryInterface(grid),
                                            water_reference_density = 1026.0, # TODO: make this a function of temperature and salinity
                                            air_reference_density = 1.225,
                                            water_specific_heat_capacity = 3991., # J / K / kg,  TODO: make this a function of temperature and salinity
@@ -140,3 +140,17 @@ end
 end
 
 @inline (L::EmpiricalLatentHeatVaporisation)(T) = (L.a - L.b * T) * 10^6 # J / kg
+
+
+#####
+##### update coefficients
+#####
+
+function update_boundary_condition!(bc::BoundaryCondition{<:Any, <:DiscreteBoundaryFunction{<:Any, <:OceanAtmosphereBoundary}}, ::Val{:top}, field, model)
+    interface = bc.condition.func.interface_coefficients
+    atmosphere = bc.condition.func.atmosphere_state
+
+    update_interface!(interface, model, atmosphere)
+
+    return nothing
+end

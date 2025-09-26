@@ -1,6 +1,12 @@
+using Oceananigans: fields
+using Oceananigans.Architectures: architecture
 using Oceananigans.BuoyancyFormulations: g_Earth
+using Oceananigans.Fields: Field, Center, set!
+using Oceananigans.Utils: launch!
 
-struct SimilarityTheoryInterface{FT, VT, VP, SF, RL} # can't think of a good name for this
+using KernelAbstractions: @kernel, @index
+
+struct SimilarityTheoryInterface{FT, VT, VP, SF, RL, DC, HC, IT} # can't think of a good name for this
              von_karman_constant :: FT
             gravity_acceleration :: FT
                 reference_height :: FT
@@ -8,56 +14,68 @@ struct SimilarityTheoryInterface{FT, VT, VP, SF, RL} # can't think of a good nam
    virtual_potential_temperature :: VP
            stability_formulation :: SF
                 roughness_length :: RL
+
+                drag_coefficient :: DC
+       heat_exchange_coefficient :: HC
+
+                       iteration :: IT
 end
 
 """
 
 """
-function SimilarityTheoryInterface(; von_karman_constant::FT = 0.4,
-                                  gravity_acceleration::FT = g_Earth,
-                                  reference_height::FT = 10.0,
-                                  virtual_temperature = VirtualTemperature(),
-                                  virtual_potential_temperature = VirtualPotentialTemperature(),
-                                  stability_parameterisation = DyerPaulsonStabilityFormulation(),
-                                  roughness_length = SmoothAndCharnock()) where FT
+function SimilarityTheoryInterface(grid; 
+                                   von_karman_constant::FT = 0.4,
+                                   gravity_acceleration::FT = g_Earth,
+                                   reference_height::FT = 10.0,
+                                   virtual_temperature = VirtualTemperature(),
+                                   virtual_potential_temperature = VirtualPotentialTemperature(),
+                                   stability_parameterisation = DyerPaulsonStabilityFormulation(),
+                                   roughness_length = SmoothAndCharnock()) where FT
+
+    drag_coefficient = Field{Center, Center, Nothing}(grid; indices = (:, :, 1))
+    heat_exchange_coefficient = Field{Center, Center, Nothing}(grid; indices = (:, :, 1))
+
+    set!(drag_coefficient, sqrt(1e-3))
+    set!(heat_exchange_coefficient, sqrt(1e-3))
+
+    iteration = Ref([-1, -1])
 
     return SimilarityTheoryInterface(von_karman_constant, gravity_acceleration, reference_height,
                                      virtual_temperature, virtual_potential_temperature,
-                                     stability_parameterisation, roughness_length)
+                                     stability_parameterisation, roughness_length,
+                                     drag_coefficient, heat_exchange_coefficient, iteration)
 end
 
 adapt_structure(to, dc::SimilarityTheoryInterface) = 
     SimilarityTheoryInterface(dc.von_karman_constant, dc.gravity_acceleration, dc.reference_height,
                               adapt(to, dc.virtual_temperature), adapt(to, dc.virtual_potential_temperature),
-                              adapt(to, dc.stability_formulation), adapt(to, dc.roughness_length))
+                              adapt(to, dc.stability_formulation), adapt(to, dc.roughness_length),
+                              adapt(to, dc.drag_coefficient), adapt(to, dc.heat_exchange_coefficient),
+                              nothing)
 
-@inline function itterate_scaling_values(interface, previous_values, p)
+@inline function itterate_scaling_values!(i, j, u′, T′, U, θ, T, w, zᵤ, zₜ, p)
     FT = typeof(interface.T)
 
-    u′, T′ = previous_values
-
-    T  = interface.T
-    w  = interface.w
     Tᵥ = p.virtual_temperature(T + FT(273.15), w)
 
-    θ  = interface.θ
     θᵥ = p.virtual_potential_temperature(θ + FT(273.15), w)
 
-    U = interface.U
     κ = p.von_karman_constant
     g = p.gravity_acceleration
-    zᵤ = interface.zᵤ
-    zₜ = interface.zₜ
 
-    Cₕ = -u′ * T′ / (U * (T - θ))
+    u′₋ = @inbounds u′[i, j, 1]
+    T′₋ = @inbounds u′[i, j, 1]
+
+    Cₕ = -u′ * T′₋ / (U * (T - θ))
 
     Cₕ = ifelse(isinf(Cₕ), FT(1e-3), Cₕ)
 
-    L = -u′^3 * Tᵥ / (g * κ * Cₕ * U * (Tᵥ - θᵥ))
+    L = -u′₋^3 * Tᵥ / (g * κ * Cₕ * U * (Tᵥ - θᵥ))
 
     L = ifelse(isinf(Cₕ) | isnan(L), zero(T), L)
 
-    zₒ, zₒₜ = p.roughness_length(u′)
+    zₒ, zₒₜ = p.roughness_length(u′₋)
 
     ψₘ, _ = p.stability_formulation(zᵤ, L)
     _, ψₜ = p.stability_formulation(zₜ, L)
@@ -67,39 +85,63 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
     u′₊ = κ * U / (log(zᵤ/zₒ) - ψₘ + ψₘₒ)
     T′₊ = κ * (θᵥ - Tᵥ) / (log(zₜ/zₒₜ) - ψₜ + ψₜₒ)
 
-    u′₊ = ifelse(isinf(zₒ), 0, u′₊)
-    T′₊ = ifelse(isinf(zₒₜ)|isinf(zₒ), 0, T′₊)
+    @inbounds u′[i, j, 1] = ifelse(isinf(zₒ), 0, u′₊)
+    @inbounds T′[i, j, 1] = ifelse(isinf(zₒₜ)|isinf(zₒ), 0, T′₊)
 
-    return max(0, u′₊), T′₊
+    return nothing
 end
 
-@inline function (cd::SimilarityTheoryInterface)(U, θ, T, w, zᵤ, zₜ)
-    interface = (; U, θ, T, w, zᵤ, zₜ)
+@kernel function _compute_coefficients!(interface::SimilarityTheoryInterface, grid, clock, model_fields, atmosphere)
+    i, j = @index(Global, NTuple)
+
+    U = relative_wind_speed(atmosphere, i, j, grid, clock, model_fields)
+    θ = temperature(atmosphere, i, j, grid, clock, model_fields)
+    w = air_water_mixing_ratio(atmosphere, i, j, grid, clock, model_fields)
+    zᵤ = velocity_reference_height(atmosphere, i, j, grid, clock, model_fields)
+    zₜ = temperature_reference_height(atmosphere, i, j, grid, clock, model_fields)
+    T = @inbounds model_fields.T[i, j, grid.Nz]
+
+    u′ = interface.drag_coefficient
+    T′ = interface.heat_exchange_coefficient
     
-    u′, T′ = sqrt.(1e-3), sqrt.(1e-3)
-
-    u′₋, T′₋ = Inf, Inf
-
     iters = 0
 
-    while ((abs(u′ - u′₋) > 1e-8) | (abs(T′ - T′₋) > 1e-8)) & (iters <= 20)
-        u′₋ = u′
-        T′₋ = T′
+    u′₋ = @inbounds u′[i, j, 1]
+    T′₋ = @inbounds T′[i, j, 1]
 
-        u′, T′ = itterate_scaling_values(interface, (; u′, T′), cd)
+    @inbounds while ((abs(u′[i, j, 1] - u′₋) > 1e-8) | (abs(T′[i, j, 1] - T′₋) > 1e-8)) & (iters <= 20)
+        u′₋ = u′[i, j, 1]
+        T′₋ = T′[i, j, 1]
+        
+        itterate_scaling_values!(i, j, u′, T′, U, θ, T, w, zᵤ, zₜ, interface)
 
         iters += 1
     end
 
-    ((abs(u′ - u′₋) > 1e-8) | (abs(T′ - T′₋) > 1e-8)) && @warn "$cd coefficients did not converge"
+    (@inbounds ((abs(u′[i, j, 1] - u′₋) > 1e-8) | (abs(T′[i, j, 1] - T′₋) > 1e-8))) && @warn "$cd coefficients did not converge"
 
-    Cd = u′^2 / (U^2 + eps(0.0))
-    Ch = - T′ * u′ / (T - θ + eps(0.0)) / (U + eps(0.0))
+    Cd = @inbounds u′[i, j, 1]^2 / (U^2 + eps(0.0))
+    Ch = @inbounds - T′[i, j, 1] * u′[i, j, 1] / (T - θ + eps(0.0)) / (U + eps(0.0))
     
-    Cd = ifelse(U == 0, 0, Cd)
-    Ch = ifelse(T == θ, 0, Ch)
+    @inbounds interface.drag_coefficient[i, j, 1] = ifelse(U == 0, 0, Cd)
+    @inbounds interface.heat_exchange_coefficient[i, j, 1] = ifelse(T == θ, 0, Ch)
+end
 
-    return Cd, Ch
+@inline function update_interface!(interface, model, atmosphere)
+    clock = model.clock
+    grid = model.grid
+    model_fields = fields(model)
+    arch = architecture(grid)
+
+    iteration, stage = interface.iteration[]
+
+    # this is going to be problamatic if a clock gets reset some how
+    if ((clock.iteration > iteration) | ((clock.iteration == iteration) & (clock.stage > stage)))
+        launch!(arch, grid, :xy, _compute_coefficients!, interface, grid, clock, model_fields, atmosphere)
+        interface.iteration[] .= [clock.iteration, clock.stage]
+    end
+
+    return nothing
 end
 
 summary(::SimilarityTheoryInterface) = string("Similarity theory drag and heat transfer coefficients")
@@ -184,25 +226,8 @@ end
 #####
 ##### external interface
 #####
-@inline function drag_coefficient(interface::SimilarityTheoryInterface, i, j, grid, clock, model_fields, atmosphere)
-    Cd, _ = coefficients(interface::SimilarityTheoryInterface, i, j, grid, clock, model_fields, atmosphere)
+@inline drag_coefficient(interface::SimilarityTheoryInterface, i, j, grid, clock, model_fields, atmosphere) =
+    @inbounds interface.drag_coefficient[i, j, 1]
 
-    return Cd
-end
-
-@inline function heat_exchange_coefficient(interface::SimilarityTheoryInterface, i, j, grid, clock, model_fields, atmosphere)
-    _, Ch = coefficients(interface::SimilarityTheoryInterface, i, j, grid, clock, model_fields, atmosphere)
-
-    return Ch
-end
-
-@inline function coefficients(interface::SimilarityTheoryInterface, i, j, grid, clock, model_fields, atmosphere)
-    U = relative_wind_speed(atmosphere, i, j, grid, clock, model_fields)
-    θ = temperature(atmosphere, i, j, grid, clock, model_fields)
-    w = air_water_mixing_ratio(atmosphere, i, j, grid, clock, model_fields)
-    zᵤ = velocity_reference_height(atmosphere, i, j, grid, clock, model_fields)
-    zₜ = temperature_reference_height(atmosphere, i, j, grid, clock, model_fields)
-    T = @inbounds model_fields.T[i, j, grid.Nz]
-    
-    return interface(U, θ, T, w, zᵤ, zₜ)
-end
+@inline heat_exchange_coefficient(interface::SimilarityTheoryInterface, i, j, grid, clock, model_fields, atmosphere) =
+    @inbounds interface.heat_exchange_coefficient[i, j, 1]
