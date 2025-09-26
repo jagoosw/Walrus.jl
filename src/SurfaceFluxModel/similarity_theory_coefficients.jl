@@ -133,7 +133,7 @@ end
 
 Adapt.adapt_structure(to, vpt::VirtualPotentialTemperature) =
     VirtualTemperature(adapt(to, vpt.height),
-                       adapt(tp, vpt.adiabatic_gradient))
+                       adapt(to, vpt.adiabatic_gradient))
 
 @inline function (vpt::VirtualPotentialTemperature)(θ, w)
     z = vpt.height
