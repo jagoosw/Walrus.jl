@@ -3,7 +3,6 @@ using Oceananigans.Architectures: architecture
 using Oceananigans.BuoyancyFormulations: g_Earth
 using Oceananigans.Fields: Field, Center, set!
 using Oceananigans.Utils: launch!
-
 using KernelAbstractions: @kernel, @index
 
 struct SimilarityTheoryInterface{FT, VT, VP, SF, RL, DC, HC} # can't think of a good name for this
@@ -64,7 +63,7 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
 
     Cₕ = -u′₋ * T′₋ / (U * (T - θ))
 
-    Cₕ = ifelse(isinf(Cₕ), FT(1e-3), Cₕ)
+    Cₕ = ifelse(isfinite(Cₕ), Cₕ, FT(1e-3))
 
     L = -u′₋^3 * Tᵥ / (g * κ * Cₕ * U * (Tᵥ - θᵥ))
 
@@ -74,14 +73,14 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
 
     ψₘ, _ = p.stability_formulation(zᵤ, L)
     _, ψₜ = p.stability_formulation(zₜ, L)
-    ψₘₒ, ψₜₒ = p.stability_formulation(zₒ, L)
-    ψₘₒ, ψₜₒ = p.stability_formulation(zₒₜ, L)
+    ψₘₒ, _ = p.stability_formulation(zₒ, L)
+    _, ψₜₒ = p.stability_formulation(zₒₜ, L)
 
     u′₊ = κ * U / (log(zᵤ/zₒ) - ψₘ + ψₘₒ)
     T′₊ = κ * (θᵥ - Tᵥ) / (log(zₜ/zₒₜ) - ψₜ + ψₜₒ)
 
-    @inbounds u′[i, j, 1] = ifelse(isinf(zₒ), 0, u′₊)
-    @inbounds T′[i, j, 1] = ifelse(isinf(zₒₜ), 0, T′₊)
+    @inbounds u′[i, j, 1] = ifelse(isfinite(zₒ), u′₊, 0)
+    @inbounds T′[i, j, 1] = ifelse(isfinite(T′₊), T′₊, 0)
 
     return nothing
 end
@@ -107,18 +106,16 @@ end
     @inbounds u′[i, j, 1] = u′₋
     @inbounds T′[i, j, 1] = T′₋
     
-    @inbounds while ((abs(u′[i, j, 1] - u′₋) > 1e-8) | (abs(T′[i, j, 1] - T′₋) > 1e-8) | iters == 0) & (iters <= 20)
+    @inbounds while ((abs(u′[i, j, 1] - u′₋) > 1e-8) | (abs(T′[i, j, 1] - T′₋) > 1e-8) | (iters == 0)) & (iters <= 20)
         u′₋ = u′[i, j, 1]
         T′₋ = T′[i, j, 1]
-
         itterate_scaling_values!(i, j, u′, T′, U, θ, T, w, zᵤ, zₜ, interface)
-
         iters += 1
     end
 
     Cd = @inbounds u′[i, j, 1]^2 / (U^2 + eps(0.0))
     Ch = @inbounds - T′[i, j, 1] * u′[i, j, 1] / (T - θ + eps(0.0)) / (U + eps(0.0))
-    
+
     @inbounds interface.drag_coefficient[i, j, 1] = ifelse(U == 0, 0, Cd)
     @inbounds interface.heat_exchange_coefficient[i, j, 1] = ifelse((T == θ)|isinf(Ch), 1e-3, Ch)
 end

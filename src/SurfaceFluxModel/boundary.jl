@@ -151,7 +151,7 @@ end
 #####
 
 function update_boundary_condition!(bc::BoundaryCondition{<:Any, <:DiscreteBoundaryFunction{<:Any, <:OceanAtmosphereBoundary}}, ::Val{:top}, field, model)
-    if bc.condition.func.controler
+    if bc.condition.parameters.controler
         interface = bc.condition.func.interface_coefficients
         atmosphere = bc.condition.func.atmosphere_state
 

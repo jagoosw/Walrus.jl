@@ -45,7 +45,8 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
                                                 air_reference_density = 0.0, 
                                                 water_reference_density = 1.0, 
                                                 water_specific_heat_capacity = 1.0,
-                                                ocean_emissivity = 0.0)
+                                                ocean_emissivity = 0.0,
+                                                controler = :T)
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
@@ -69,7 +70,8 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
                                                 water_reference_density = 1.0, 
                                                 water_specific_heat_capacity = 1.0,
                                                 air_specific_heat_capacity = 1.0,
-                                                latent_heat_vaporisation = (args...) -> 0)
+                                                latent_heat_vaporisation = (args...) -> 0,
+                                                controler = :T)
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
@@ -78,7 +80,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     set!(model, T = -273.15, u = 1)
 
-    Ch = heat_exchange_coefficient(Q.condition.func.interface_coefficients, 1, 1, grid, clock, fields(model), atmosphere)
+    Ch = CUDA.@allowscalar heat_exchange_coefficient(Q.condition.func.interface_coefficients, 1, 1, grid, clock, fields(model), atmosphere)
     
     time_step!(model, 1/Ch) # 1/Cʰ at U = 1m/s
 
@@ -99,7 +101,8 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
                                                 water_reference_density = 1.0, 
                                                 water_specific_heat_capacity = 1.0,
                                                 air_specific_heat_capacity = 1.0,
-                                                latent_heat_vaporisation = (args...) -> 0)
+                                                latent_heat_vaporisation = (args...) -> 0,
+                                                controler = :T)
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
@@ -117,7 +120,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     # when the water is warmer, it looses heat
     set!(model, T = 1)
-    
+
     for n in 1:2
         time_step!(model, 1)
     end
@@ -147,7 +150,8 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
                                                 air_reference_density = 1.0, 
                                                 water_reference_density = 1.0, 
                                                 water_specific_heat_capacity = 1.0,
-                                                air_specific_heat_capacity = 0.0)
+                                                air_specific_heat_capacity = 0.0,
+                                                controler = :T)
 
     model = NonhydrostaticModel(; grid, 
                                   tracers = :T,
