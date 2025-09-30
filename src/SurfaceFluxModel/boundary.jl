@@ -35,7 +35,8 @@ function OceanAtmosphereBoundaryConditions(grid, atmosphere_state;
                                            vapour_pressure = AugustRocheMagnusVapourPressure(),
                                            latent_heat_vaporisation = EmpiricalLatentHeatVaporisation(),
                                            stephan_boltzman_constant = 5.670374419e-8, # W / K⁴
-                                           ocean_emissivity = 0.97)
+                                           ocean_emissivity = 0.97,
+                                           controler = :u)
 
     boundary = OceanAtmosphereBoundary(interface_coefficients, atmosphere_state,
                                        water_reference_density, air_reference_density, 
@@ -43,13 +44,16 @@ function OceanAtmosphereBoundaryConditions(grid, atmosphere_state;
                                        vapour_pressure, latent_heat_vaporisation,
                                        stephan_boltzman_constant, ocean_emissivity)
 
-    u = FluxBoundaryCondition(boundary; parameters = Val(:u), discrete_form=true)
-    v = FluxBoundaryCondition(boundary; parameters = Val(:v), discrete_form=true)
-    T = FluxBoundaryCondition(boundary; parameters = Val(:T), discrete_form=true)
+    u = FluxBoundaryCondition(boundary; parameters = (; tracer = Val(:u), controler = (controler == :u)), discrete_form=true)
+    v = FluxBoundaryCondition(boundary; parameters = (; tracer = Val(:v), controler = (controler == :v)), discrete_form=true)
+    T = FluxBoundaryCondition(boundary; parameters = (; tracer = Val(:T), controler = (controler == :T)), discrete_form=true)
     # TODO: add evaporation and proper calculations for other scalars like CO₂
 
     return (; u, v, T)
 end
+
+@inline (boundary::OceanAtmosphereBoundary)(i, j, grid, clock, model_fields, parameters) = 
+    boundary(i, j, grid, clock, model_fields, parameters.tracer)
 
 @inline function (boundary::OceanAtmosphereBoundary)(i, j, grid, clock, model_fields, ::Val{:u})
     ρₐ = boundary.air_reference_density
@@ -147,10 +151,12 @@ end
 #####
 
 function update_boundary_condition!(bc::BoundaryCondition{<:Any, <:DiscreteBoundaryFunction{<:Any, <:OceanAtmosphereBoundary}}, ::Val{:top}, field, model)
-    interface = bc.condition.func.interface_coefficients
-    atmosphere = bc.condition.func.atmosphere_state
+    if bc.condition.func.controler
+        interface = bc.condition.func.interface_coefficients
+        atmosphere = bc.condition.func.atmosphere_state
 
-    update_interface!(interface, model, atmosphere)
+        update_interface!(interface, model, atmosphere)
+    end
 
     return nothing
 end

@@ -6,7 +6,7 @@ using Oceananigans.Utils: launch!
 
 using KernelAbstractions: @kernel, @index
 
-struct SimilarityTheoryInterface{FT, VT, VP, SF, RL, DC, HC, IT} # can't think of a good name for this
+struct SimilarityTheoryInterface{FT, VT, VP, SF, RL, DC, HC} # can't think of a good name for this
              von_karman_constant :: FT
             gravity_acceleration :: FT
                 reference_height :: FT
@@ -17,8 +17,6 @@ struct SimilarityTheoryInterface{FT, VT, VP, SF, RL, DC, HC, IT} # can't think o
 
                 drag_coefficient :: DC
        heat_exchange_coefficient :: HC
-
-                       iteration :: IT
 end
 
 """
@@ -39,20 +37,17 @@ function SimilarityTheoryInterface(grid;
     set!(drag_coefficient, sqrt(1e-3))
     set!(heat_exchange_coefficient, sqrt(1e-3))
 
-    iteration = Ref([-1, -1])
-
     return SimilarityTheoryInterface(von_karman_constant, gravity_acceleration, reference_height,
                                      virtual_temperature, virtual_potential_temperature,
                                      stability_parameterisation, roughness_length,
-                                     drag_coefficient, heat_exchange_coefficient, iteration)
+                                     drag_coefficient, heat_exchange_coefficient)
 end
 
 adapt_structure(to, dc::SimilarityTheoryInterface) = 
     SimilarityTheoryInterface(dc.von_karman_constant, dc.gravity_acceleration, dc.reference_height,
                               adapt(to, dc.virtual_temperature), adapt(to, dc.virtual_potential_temperature),
                               adapt(to, dc.stability_formulation), adapt(to, dc.roughness_length),
-                              adapt(to, dc.drag_coefficient), adapt(to, dc.heat_exchange_coefficient),
-                              nothing)
+                              adapt(to, dc.drag_coefficient), adapt(to, dc.heat_exchange_coefficient))
 
 @inline function itterate_scaling_values!(i, j, u′, T′, U, θ, T, w, zᵤ, zₜ, p)
     FT = typeof(T)
@@ -103,28 +98,29 @@ end
 
     u′ = interface.drag_coefficient
     T′ = interface.heat_exchange_coefficient
-    
+
     iters = 0
 
-    u′₋ = @inbounds u′[i, j, 1]
-    T′₋ = @inbounds T′[i, j, 1]
+    u′₋ = sqrt(1e-3)
+    T′₋ = sqrt(1e-3)
 
-    @inbounds while ((abs(u′[i, j, 1] - u′₋) > 1e-8) | (abs(T′[i, j, 1] - T′₋) > 1e-8)) & (iters <= 20)
+    @inbounds u′[i, j, 1] = u′₋
+    @inbounds T′[i, j, 1] = T′₋
+    
+    @inbounds while ((abs(u′[i, j, 1] - u′₋) > 1e-8) | (abs(T′[i, j, 1] - T′₋) > 1e-8) | iters == 0) & (iters <= 20)
         u′₋ = u′[i, j, 1]
         T′₋ = T′[i, j, 1]
-        
+
         itterate_scaling_values!(i, j, u′, T′, U, θ, T, w, zᵤ, zₜ, interface)
 
         iters += 1
     end
 
-    (@inbounds ((abs(u′[i, j, 1] - u′₋) > 1e-8) | (abs(T′[i, j, 1] - T′₋) > 1e-8))) && @warn "$cd coefficients did not converge"
-
     Cd = @inbounds u′[i, j, 1]^2 / (U^2 + eps(0.0))
     Ch = @inbounds - T′[i, j, 1] * u′[i, j, 1] / (T - θ + eps(0.0)) / (U + eps(0.0))
     
     @inbounds interface.drag_coefficient[i, j, 1] = ifelse(U == 0, 0, Cd)
-    @inbounds interface.heat_exchange_coefficient[i, j, 1] = ifelse(T == θ, 0, Ch)
+    @inbounds interface.heat_exchange_coefficient[i, j, 1] = ifelse((T == θ)|isinf(Ch), 1e-3, Ch)
 end
 
 @inline function update_interface!(interface, model, atmosphere)
@@ -133,17 +129,10 @@ end
     model_fields = fields(model)
     arch = architecture(grid)
 
-    iteration, stage = interface.iteration[]
-
-    # this is going to be problamatic if a clock gets reset some how
-    if ((clock.iteration > iteration) | ((clock.iteration == iteration) & (clock.stage > stage)))
-        launch!(arch, grid, :xy, _compute_coefficients!, interface, grid, clock, model_fields, atmosphere)
-        interface.iteration[] .= [clock.iteration, clock.stage]
-    end
+    launch!(arch, grid, :xy, _compute_coefficients!, interface, grid, clock, model_fields, atmosphere)
 
     return nothing
 end
-
 summary(::SimilarityTheoryInterface) = string("Similarity theory drag and heat transfer coefficients")
 #=show(io::IO, cd::SimilarityTheoryInterface) = println(io, summary(cd), " with:\n",
                                                   " κ: ",  cd.von_karman_constant, "\n",
