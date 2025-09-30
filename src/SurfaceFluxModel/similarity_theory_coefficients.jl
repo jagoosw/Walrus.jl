@@ -111,7 +111,7 @@ end
     Ch = @inbounds - T′ * u′ / (T - θ + eps(0.0)) / (U + eps(0.0))
 
     @inbounds interface.drag_coefficient[i, j, 1] = ifelse(U == 0, 0, Cd)
-    @inbounds interface.heat_exchange_coefficient[i, j, 1] = ifelse((T == θ)|isinf(Ch), 1e-3, Ch)
+    @inbounds interface.heat_exchange_coefficient[i, j, 1] = ifelse(isfinite(Ch), Ch, 1e-3)
 end
 
 @inline function update_interface!(interface, model, atmosphere)
