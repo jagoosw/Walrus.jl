@@ -48,7 +48,7 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
                               adapt(to, dc.stability_formulation), adapt(to, dc.roughness_length),
                               adapt(to, dc.drag_coefficient), adapt(to, dc.heat_exchange_coefficient))
 
-@inline function itterate_scaling_values!(i, j, u′, T′, U, θ, T, w, zᵤ, zₜ, p)
+@inline function itterate_scaling_values( u′, T′, U, θ, T, w, zᵤ, zₜ, p)
     FT = typeof(T)
 
     Tᵥ = p.virtual_temperature(T + FT(273.15), w)
@@ -58,18 +58,15 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
     κ = p.von_karman_constant
     g = p.gravity_acceleration
 
-    u′₋ = @inbounds u′[i, j, 1]
-    T′₋ = @inbounds u′[i, j, 1]
-
-    Cₕ = -u′₋ * T′₋ / (U * (T - θ))
+    Cₕ = -u′ * T′ / (U * (T - θ))
 
     Cₕ = ifelse(isfinite(Cₕ), Cₕ, FT(1e-3))
 
-    L = -u′₋^3 * Tᵥ / (g * κ * Cₕ * U * (Tᵥ - θᵥ))
+    L = -u′^3 * Tᵥ / (g * κ * Cₕ * U * (Tᵥ - θᵥ))
 
     L = ifelse(isinf(Cₕ) | isnan(L), zero(T), L)
 
-    zₒ, zₒₜ = p.roughness_length(u′₋)
+    zₒ, zₒₜ = p.roughness_length(u′)
 
     ψₘ, _ = p.stability_formulation(zᵤ, L)
     _, ψₜ = p.stability_formulation(zₜ, L)
@@ -79,10 +76,7 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
     u′₊ = κ * U / (log(zᵤ/zₒ) - ψₘ + ψₘₒ)
     T′₊ = κ * (θᵥ - Tᵥ) / (log(zₜ/zₒₜ) - ψₜ + ψₜₒ)
 
-    @inbounds u′[i, j, 1] = ifelse(isfinite(zₒ), u′₊, 0)
-    @inbounds T′[i, j, 1] = ifelse(isfinite(T′₊), T′₊, 0)
-
-    return nothing
+    return (; u′ = max(0, u′₊), T′ = T′₊)
 end
 
 @kernel function _compute_coefficients!(interface::SimilarityTheoryInterface, grid, clock, model_fields, atmosphere)
@@ -95,26 +89,26 @@ end
     zₜ = temperature_reference_height(atmosphere, i, j, grid, clock, model_fields)
     T = @inbounds model_fields.T[i, j, grid.Nz]
 
-    u′ = interface.drag_coefficient
-    T′ = interface.heat_exchange_coefficient
+    u′, T′ = sqrt(1e-3), sqrt(1e-3)
+
+    u′₋, T′₋ = Inf, Inf
 
     iters = 0
-
-    u′₋ = sqrt(1e-3)
-    T′₋ = sqrt(1e-3)
-
-    @inbounds u′[i, j, 1] = u′₋
-    @inbounds T′[i, j, 1] = T′₋
     
-    @inbounds while ((abs(u′[i, j, 1] - u′₋) > 1e-8) | (abs(T′[i, j, 1] - T′₋) > 1e-8) | (iters == 0)) & (iters <= 20)
-        u′₋ = u′[i, j, 1]
-        T′₋ = T′[i, j, 1]
-        itterate_scaling_values!(i, j, u′, T′, U, θ, T, w, zᵤ, zₜ, interface)
+    @inbounds while ((abs(u′ - u′₋) > 1e-8) | (abs(T′ - T′₋) > 1e-8)) & (iters <= 20)
+        u′₋ = u′
+        T′₋ = T′
+
+        next_step = itterate_scaling_values(u′, T′, U, θ, T, w, zᵤ, zₜ, interface)
+
+        u′ = next_step.u′
+        T′ = next_step.T′   
+
         iters += 1
     end
 
-    Cd = @inbounds u′[i, j, 1]^2 / (U^2 + eps(0.0))
-    Ch = @inbounds - T′[i, j, 1] * u′[i, j, 1] / (T - θ + eps(0.0)) / (U + eps(0.0))
+    Cd = @inbounds u′^2 / (U^2 + eps(0.0))
+    Ch = @inbounds - T′ * u′ / (T - θ + eps(0.0)) / (U + eps(0.0))
 
     @inbounds interface.drag_coefficient[i, j, 1] = ifelse(U == 0, 0, Cd)
     @inbounds interface.heat_exchange_coefficient[i, j, 1] = ifelse((T == θ)|isinf(Ch), 1e-3, Ch)
@@ -130,6 +124,7 @@ end
 
     return nothing
 end
+
 summary(::SimilarityTheoryInterface) = string("Similarity theory drag and heat transfer coefficients")
 #=show(io::IO, cd::SimilarityTheoryInterface) = println(io, summary(cd), " with:\n",
                                                   " κ: ",  cd.von_karman_constant, "\n",
