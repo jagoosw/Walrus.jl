@@ -48,12 +48,12 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
                               adapt(to, dc.stability_formulation), adapt(to, dc.roughness_length),
                               adapt(to, dc.drag_coefficient), adapt(to, dc.heat_exchange_coefficient))
 
-@inline function itterate_scaling_values( u′, T′, U, θ, T, w, zᵤ, zₜ, p)
+@inline function itterate_scaling_values(u′, T′, U, θ, T, w, zᵤ, zₜ, p)
     FT = typeof(T)
 
     Tᵥ = p.virtual_temperature(T + FT(273.15), w)
 
-    θᵥ = p.virtual_potential_temperature(θ + FT(273.15), w)
+    θᵥ = (θ + FT(273.15)) * (1 + 4.7e-4 * w * (θ + FT(273.15)) / 273.15) + zₜ * 0.01
 
     κ = p.von_karman_constant
     g = p.gravity_acceleration

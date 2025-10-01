@@ -111,7 +111,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     # no heat exchange when temperatures equal
     set!(model, T = 0)
-    
+
     for n in 1:2
         time_step!(model, 1)
     end
@@ -129,7 +129,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     # when the water is colder, it gains heat
     set!(model, T = -1)
-    
+
     for n in 1:2
         time_step!(model, 1)
     end
@@ -160,7 +160,7 @@ required_biogeochemical_tracers(::JustPhytoplankton) = (:P, )
 
     # no heat exchange when vapour pressure equalised
     set!(model, T = 0)
-    
+
     for n in 1:2
         time_step!(model, 1)
     end

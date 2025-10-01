@@ -111,7 +111,6 @@ end
     return (radiative_cooling + sensible_cooling + latent_cooling) / (ρₒ * cₚʷ) # (J / m² / s) / ((kg / m³) (J / kg / K)) -> (J / m² / s) / ( J / m³ / K)) -> K m / s
 end
 
-
 #####
 ##### parameterisation for vapour pressure with default coefficients from [alduchov1996](@citet).
 #####
