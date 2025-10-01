@@ -8,9 +8,7 @@ export HomogeneousBodyHeating, PARModelHeating
 
 export Tide, Tides
 
-#export WindStress, WindStressBoundaryConditions
-
-#export SurfaceHeatExchange, SurfaceHeatExchangeBoundaryCondition
+export OceanAtmosphereBoundaryConditions, PrescribedAtmosphericState, SimilarityTheoryInterface
 
 export WindDrivenStokesDrift, WindDrivenStokesDriftSetup
 
@@ -30,6 +28,7 @@ using .Interpolations
 using .WallStressModel
 using .RadiativeTransfer
 using .TidalForcing
+using .SurfaceFluxModel
 using .WindDrivenStokesParameterisation
 
 end # module Walrus

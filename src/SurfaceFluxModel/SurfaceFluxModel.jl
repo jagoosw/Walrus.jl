@@ -1,5 +1,7 @@
 module SurfaceFluxModel
 
+export OceanAtmosphereBoundaryConditions, PrescribedAtmosphericState, SimilarityTheoryInterface
+
 using Adapt
 
 import Adapt: adapt_structure
