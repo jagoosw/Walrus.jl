@@ -10,7 +10,7 @@ export Tide, Tides
 
 export OceanAtmosphereBoundaryConditions, PrescribedAtmosphericState, SimilarityTheoryInterface
 
-export WindDrivenStokesDrift, WindDrivenStokesDriftSetup
+#export WindDrivenStokesDrift, WindDrivenStokesDriftSetup
 
 using Adapt: adapt
 
@@ -22,7 +22,7 @@ include("wall_model.jl")
 include("radiative_transfer/radiative_transfer.jl")
 include("tidal_forcings.jl")
 include("SurfaceFluxModel/SurfaceFluxModel.jl")
-include("wind_driven_stokes.jl")
+#include("wind_driven_stokes.jl")
 
 using .Interpolations
 using .WallStressModel
