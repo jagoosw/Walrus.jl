@@ -29,6 +29,6 @@ using .WallStressModel
 using .RadiativeTransfer
 using .TidalForcing
 using .SurfaceFluxModel
-using .WindDrivenStokesParameterisation
+#using .WindDrivenStokesParameterisation
 
 end # module Walrus
