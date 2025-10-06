@@ -5,7 +5,7 @@ using Oceananigans.Fields: Field, Center, set!
 using Oceananigans.Utils: launch!
 using KernelAbstractions: @kernel, @index
 
-struct SimilarityTheoryInterface{FT, VT, VP, SF, RL, DC, HC} # can't think of a good name for this
+struct SimilarityTheoryInterface{FT, VT, VP, SF, RL, DC, HC, MI} # can't think of a good name for this
              von_karman_constant :: FT
             gravity_acceleration :: FT
                 reference_height :: FT
@@ -16,6 +16,8 @@ struct SimilarityTheoryInterface{FT, VT, VP, SF, RL, DC, HC} # can't think of a 
 
                 drag_coefficient :: DC
        heat_exchange_coefficient :: HC
+
+                  max_iterations :: MI
 end
 
 """
@@ -28,7 +30,8 @@ function SimilarityTheoryInterface(grid;
                                    virtual_temperature = VirtualTemperature(),
                                    virtual_potential_temperature = VirtualPotentialTemperature(),
                                    stability_parameterisation = DyerPaulsonStabilityFormulation(),
-                                   roughness_length = SmoothAndCharnock()) where FT
+                                   roughness_length = SmoothAndCharnock(),
+                                   max_iterations = 20) where FT
 
     drag_coefficient = Field{Center, Center, Nothing}(grid; indices = (:, :, 1))
     heat_exchange_coefficient = Field{Center, Center, Nothing}(grid; indices = (:, :, 1))
@@ -39,14 +42,16 @@ function SimilarityTheoryInterface(grid;
     return SimilarityTheoryInterface(von_karman_constant, gravity_acceleration, reference_height,
                                      virtual_temperature, virtual_potential_temperature,
                                      stability_parameterisation, roughness_length,
-                                     drag_coefficient, heat_exchange_coefficient)
+                                     drag_coefficient, heat_exchange_coefficient, 
+                                     max_iterations)
 end
 
 adapt_structure(to, dc::SimilarityTheoryInterface) = 
     SimilarityTheoryInterface(dc.von_karman_constant, dc.gravity_acceleration, dc.reference_height,
                               adapt(to, dc.virtual_temperature), adapt(to, dc.virtual_potential_temperature),
                               adapt(to, dc.stability_formulation), adapt(to, dc.roughness_length),
-                              adapt(to, dc.drag_coefficient), adapt(to, dc.heat_exchange_coefficient))
+                              adapt(to, dc.drag_coefficient), adapt(to, dc.heat_exchange_coefficient),
+                              adapt(to, dc.max_iterations))
 
 @inline function itterate_scaling_values(u′, T′, U, θ, T, w, zᵤ, zₜ, p)
     FT = typeof(T)
@@ -95,7 +100,7 @@ end
 
     iters = 0
     
-    @inbounds while ((abs(u′ - u′₋) > 1e-8) | (abs(T′ - T′₋) > 1e-8)) & (iters <= 20)
+    @inbounds while ((abs(u′ - u′₋) > 1e-8) | (abs(T′ - T′₋) > 1e-8)) & (iters <= interface.max_iterations)
         u′₋ = u′
         T′₋ = T′
 
