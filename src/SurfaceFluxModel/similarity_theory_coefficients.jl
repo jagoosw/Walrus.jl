@@ -78,8 +78,8 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
     ψₘₒ, _ = p.stability_formulation(zₒ, L)
     _, ψₜₒ = p.stability_formulation(zₒₜ, L)
 
-    u′₊ = κ * U / (log(zᵤ/zₒ) - ψₘ + ψₘₒ)
-    T′₊ = κ * (θᵥ - Tᵥ) / (log(zₜ/zₒₜ) - ψₜ + ψₜₒ)
+    u′₊ = κ * U / (log(zᵤ/zₒ) - ψₘ)# + ψₘₒ)
+    T′₊ = κ * (θᵥ - Tᵥ) / (log(zₜ/zₒₜ) - ψₜ)# + ψₜₒ)
 
     return (; u′ = u′₊, T′ = T′₊)
 end
