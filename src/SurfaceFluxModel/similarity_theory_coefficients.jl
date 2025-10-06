@@ -62,11 +62,11 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
 
     Cₕ = ifelse(isfinite(Cₕ), Cₕ, FT(1e-3))
 
-    L = -u′^3 * Tᵥ / (g * κ * Cₕ * U * (Tᵥ - θᵥ))
+    L = -u′^3 * θᵥ / (g * κ * Cₕ * U * (Tᵥ - θᵥ))
 
-    L = ifelse(isinf(Cₕ) | isnan(L), zero(T), L)
+    L = ifelse(isfinite(L), L, zero(T))
 
-    zₒ, zₒₜ = p.roughness_length(u′)
+    zₒ, zₒₜ = p.roughness_length(abs(u′))
 
     ψₘ, _ = p.stability_formulation(zᵤ, L)
     _, ψₜ = p.stability_formulation(zₜ, L)
@@ -76,7 +76,7 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
     u′₊ = κ * U / (log(zᵤ/zₒ) - ψₘ + ψₘₒ)
     T′₊ = κ * (θᵥ - Tᵥ) / (log(zₜ/zₒₜ) - ψₜ + ψₜₒ)
 
-    return (; u′ = max(0, u′₊), T′ = T′₊)
+    return (; u′ = u′₊, T′ = T′₊)
 end
 
 @kernel function _compute_coefficients!(interface::SimilarityTheoryInterface, grid, clock, model_fields, atmosphere)
@@ -102,7 +102,7 @@ end
         next_step = itterate_scaling_values(u′, T′, U, θ, T, w, zᵤ, zₜ, interface)
 
         u′ = next_step.u′
-        T′ = next_step.T′   
+        T′ = next_step.T′
 
         iters += 1
     end
