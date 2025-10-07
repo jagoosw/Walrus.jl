@@ -31,7 +31,7 @@ function SimilarityTheoryInterface(grid;
                                    virtual_potential_temperature = VirtualPotentialTemperature(),
                                    stability_parameterisation = DyerPaulsonStabilityFormulation(),
                                    roughness_length = SmoothAndCharnock(),
-                                   max_iterations = 20) where FT
+                                   max_iterations = 40) where FT
 
     drag_coefficient = Field{Center, Center, Nothing}(grid; indices = (:, :, 1))
     heat_exchange_coefficient = Field{Center, Center, Nothing}(grid; indices = (:, :, 1))
@@ -65,27 +65,25 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
 
     Cₕ = -u′ * T′ / (U * (T - θ))
 
-    Cₕ = ifelse(isfinite(Cₕ), Cₕ, FT(1e-3))
+    #Cₕ = ifelse(isfinite(Cₕ), Cₕ, FT(1e-3))
 
     L = -u′^3 * θᵥ / (g * κ * Cₕ * U * (Tᵥ - θᵥ))
-
-    L = ifelse(isfinite(L), L, zero(T))
 
     zₒ, zₒₜ = p.roughness_length(abs(u′))
 
     ψₘ, _ = p.stability_formulation(zᵤ, L)
     _, ψₜ = p.stability_formulation(zₜ, L)
-    ψₘₒ, _ = p.stability_formulation(zₒ, L)
-    _, ψₜₒ = p.stability_formulation(zₒₜ, L)
 
-    u′₊ = κ * U / (log(zᵤ/zₒ) - ψₘ)# + ψₘₒ)
-    T′₊ = κ * (θᵥ - Tᵥ) / (log(zₜ/zₒₜ) - ψₜ)# + ψₜₒ)
+    u′₊ = κ * U / (log(zᵤ/zₒ) - ψₘ)
+    T′₊ = κ * (θᵥ - Tᵥ) / (log(zₜ/zₒₜ) - ψₜ)
 
     return (; u′ = u′₊, T′ = T′₊)
 end
 
 @kernel function _compute_coefficients!(interface::SimilarityTheoryInterface, grid, clock, model_fields, atmosphere)
     i, j = @index(Global, NTuple)
+
+    FT = eltype(grid)
 
     U = relative_wind_speed(atmosphere, i, j, grid, clock, model_fields)
     θ = temperature(atmosphere, i, j, grid, clock, model_fields)
@@ -94,9 +92,9 @@ end
     zₜ = temperature_reference_height(atmosphere, i, j, grid, clock, model_fields)
     T = @inbounds model_fields.T[i, j, grid.Nz]
 
-    u′, T′ = sqrt(1e-3), sqrt(1e-3)
+    u′, T′ = sqrt(FT(1e-3)), sqrt(FT(1e-3))
 
-    u′₋, T′₋ = Inf, Inf
+    u′₋, T′₋ = FT(Inf), FT(Inf)
 
     iters = 0
     
@@ -112,11 +110,13 @@ end
         iters += 1
     end
 
+#    ((abs(u′ - u′₋) > 1e-8) | (abs(T′ - T′₋) > 1e-8)) && @warn "Did not converge with $u′, $T′, $U, $θ, $T, $w"
+
     Cd = @inbounds u′^2 / (U^2 + eps(0.0))
     Ch = @inbounds - T′ * u′ / (T - θ + eps(0.0)) / (U + eps(0.0))
 
-    @inbounds interface.drag_coefficient[i, j, 1] = ifelse(U == 0, 0, Cd)
-    @inbounds interface.heat_exchange_coefficient[i, j, 1] = ifelse(isfinite(Ch), Ch, 1e-3)
+    @inbounds interface.drag_coefficient[i, j, 1] = ifelse(U == 0, zero(FT), Cd)
+    @inbounds interface.heat_exchange_coefficient[i, j, 1] = ifelse(isfinite(Ch), Ch, FT(1e-3))
 end
 
 @inline function update_interface!(interface, model, atmosphere)
