@@ -75,6 +75,9 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
     u′₊ = κ * U / (log(zᵤ/zₒ) - ψₘ)
     T′₊ = κ * (θ - T) / (log(zₜ/zₒₜ) - ψₜ)
 
+    # SMITH, 1988 says κ * (θᵥ - Tᵥ) / (log(zₜ/zₒₜ) - ψₜ) but that makes 
+    # very strange values around θ -(⨥/−)→ T
+
     return (; u′ = u′₊, T′ = T′₊)
 end
 
@@ -113,8 +116,8 @@ end
     Cd = @inbounds u′^2 / (U^2 + eps(0.0))
     Ch = @inbounds - T′ * u′ / (T - θ + eps(0.0)) / (U + eps(0.0))
 
-    @inbounds interface.drag_coefficient[i, j, 1] = ifelse(U == 0, zero(FT), Cd)
-    @inbounds interface.heat_exchange_coefficient[i, j, 1] = ifelse(isfinite(Ch), Ch, FT(1e-3))
+    @inbounds interface.drag_coefficient[i, j, 1] = min(convert(FT, 1/10), ifelse(U == 0, zero(FT), Cd))
+    @inbounds interface.heat_exchange_coefficient[i, j, 1] = min(convert(FT, 1/10), ifelse(isfinite(Ch), Ch, FT(1e-3)))
 end
 
 @inline function update_interface!(interface, model, atmosphere)
