@@ -45,6 +45,22 @@ function SimilarityTheoryInterface(grid;
                                      max_iterations)
 end
 
+function SimilarityTheoryInterface(::Nothing; 
+                                   von_karman_constant::FT = 0.4,
+                                   gravity_acceleration::FT = defaults.gravitational_acceleration,
+                                   reference_height::FT = 10.0,
+                                   virtual_temperature = VirtualTemperature(),
+                                   virtual_potential_temperature = VirtualPotentialTemperature(),
+                                   stability_parameterisation = DyerPaulsonStabilityFormulation(),
+                                   roughness_length = SmoothAndCharnock(),
+                                   max_iterations = 40) where FT
+
+    return SimilarityTheoryInterface(von_karman_constant, gravity_acceleration, reference_height,
+                                     virtual_temperature, virtual_potential_temperature,
+                                     stability_parameterisation, roughness_length,
+                                     nothing, nothing, max_iterations)
+end
+
 adapt_structure(to, dc::SimilarityTheoryInterface) = 
     SimilarityTheoryInterface(dc.von_karman_constant, dc.gravity_acceleration, dc.reference_height,
                               adapt(to, dc.virtual_temperature), adapt(to, dc.virtual_potential_temperature),
