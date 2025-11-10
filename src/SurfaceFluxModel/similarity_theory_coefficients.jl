@@ -67,10 +67,15 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
 
     L = -u′^3 * θᵥ / (g * κ * Cₕ * U * (Tᵥ - θᵥ))
 
+    L = ifelse(isinf(Cₕ), Inf, 0)
+
     zₒ, zₒₜ = p.roughness_length(abs(u′))
 
     ψₘ, _ = p.stability_formulation(zᵤ, L)
     _, ψₜ = p.stability_formulation(zₜ, L)
+
+    ψₘ = ifelse(isnan(ψₘ), 0, ψₘ)
+    ψₜ = ifelse(isnan(ψₜ), 0, ψₜ)
 
     u′₊ = κ * U / (log(zᵤ/zₒ) - ψₘ)
     T′₊ = κ * (θ - T) / (log(zₜ/zₒₜ) - ψₜ)
