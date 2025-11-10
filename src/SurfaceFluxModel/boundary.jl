@@ -1,6 +1,6 @@
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition, BoundaryCondition, DiscreteBoundaryFunction
 
-struct OceanAtmosphereBoundary{IC, AS, WD, AD, WC, AC, VP, LH, FT} <: Function
+struct OceanAtmosphereBoundary{CTRL, IC, AS, WD, AD, WC, AC, VP, LH, FT} <: Function
           interface_coefficients :: IC
                 atmosphere_state :: AS
 
@@ -12,25 +12,47 @@ struct OceanAtmosphereBoundary{IC, AS, WD, AD, WC, AC, VP, LH, FT} <: Function
         latent_heat_vaporisation :: LH
        stephan_boltzman_constant :: FT
                 ocean_emissivity :: FT
+
+    OceanAtmosphereBoundary{CTRL}(interface_coefficients::IC,
+                                       atmosphere_state::AS,
+                                       water_reference_density::WD,
+                                       air_reference_density::AD,
+                                       water_specific_heat_capacity::WC,
+                                       air_specific_heat_capacity::AC,
+                                       vapour_pressure::VP,
+                                       latent_heat_vaporisation::LH,
+                                       stephan_boltzman_constant::FT,
+                                       ocean_emissivity::FT) where {CTRL, IC, AS, WD, AD, WC, AC, VP, LH, FT} =
+        new{CTRL, IC, AS, WD, AD, WC, AC, VP, LH, FT}(interface_coefficients, 
+                                                      atmosphere_state,
+                                                      water_reference_density,
+                                                      air_reference_density,
+                                                      water_specific_heat_capacity,
+                                                      air_specific_heat_capacity,
+                                                      vapour_pressure,
+                                                      latent_heat_vaporisation,
+                                                      stephan_boltzman_constant,
+                                                      ocean_emissivity)
+                        
 end
 
-Adapt.adapt_structure(to, boundary::OceanAtmosphereBoundary) =
-    OceanAtmosphereBoundary(adapt(to, boundary.interface_coefficients),
-                            adapt(to, boundary.atmosphere_state),
-                            adapt(to, boundary.water_reference_density),
-                            adapt(to, boundary.air_reference_density),
-                            adapt(to, boundary.water_specific_heat_capacity),
-                            adapt(to, boundary.air_specific_heat_capacity),
-                            adapt(to, boundary.vapour_pressure),
-                            adapt(to, boundary.latent_heat_vaporisation),
-                            boundary.stephan_boltzman_constant,
-                            boundary.ocean_emissivity)
+Adapt.adapt_structure(to, boundary::OceanAtmosphereBoundary{CTRL}) where CTRL =
+    OceanAtmosphereBoundary{CTRL}(adapt(to, boundary.interface_coefficients),
+                                  adapt(to, boundary.atmosphere_state),
+                                  adapt(to, boundary.water_reference_density),
+                                  adapt(to, boundary.air_reference_density),
+                                  adapt(to, boundary.water_specific_heat_capacity),
+                                  adapt(to, boundary.air_specific_heat_capacity),
+                                  adapt(to, boundary.vapour_pressure),
+                                  adapt(to, boundary.latent_heat_vaporisation),
+                                  boundary.stephan_boltzman_constant,
+                                  boundary.ocean_emissivity)
 
 function OceanAtmosphereBoundaryConditions(grid, atmosphere_state; 
                                            interface_coefficients = SimilarityTheoryInterface(grid),
                                            water_reference_density = 1026.0, # TODO: make this a function of temperature and salinity
                                            air_reference_density = 1.225,
-                                           water_specific_heat_capacity = 3991., # J / K / kg,  TODO: make this a function of temperature and salinity
+                                           water_specific_heat_capacity = 3991.0, # J / K / kg,  TODO: make this a function of temperature and salinity
                                            air_specific_heat_capacity = 1003.5, # J / K / kg
                                            vapour_pressure = AugustRocheMagnusVapourPressure(),
                                            latent_heat_vaporisation = EmpiricalLatentHeatVaporisation(),
@@ -38,22 +60,25 @@ function OceanAtmosphereBoundaryConditions(grid, atmosphere_state;
                                            ocean_emissivity = 0.97,
                                            controler = :u)
 
-    boundary = OceanAtmosphereBoundary(interface_coefficients, atmosphere_state,
-                                       water_reference_density, air_reference_density, 
-                                       water_specific_heat_capacity, air_specific_heat_capacity, 
-                                       vapour_pressure, latent_heat_vaporisation,
-                                       stephan_boltzman_constant, ocean_emissivity)
+    boundary = OceanAtmosphereBoundary{false}(interface_coefficients, atmosphere_state,
+                                              water_reference_density, air_reference_density, 
+                                              water_specific_heat_capacity, air_specific_heat_capacity, 
+                                              vapour_pressure, latent_heat_vaporisation,
+                                              stephan_boltzman_constant, ocean_emissivity)
 
-    u = FluxBoundaryCondition(boundary; parameters = (; tracer = Val(:u), controler = (controler == :u)), discrete_form=true)
-    v = FluxBoundaryCondition(boundary; parameters = (; tracer = Val(:v), controler = (controler == :v)), discrete_form=true)
-    T = FluxBoundaryCondition(boundary; parameters = (; tracer = Val(:T), controler = (controler == :T)), discrete_form=true)
+    updating_boundary = OceanAtmosphereBoundary{true}(interface_coefficients, atmosphere_state,
+                                                      water_reference_density, air_reference_density, 
+                                                      water_specific_heat_capacity, air_specific_heat_capacity, 
+                                                      vapour_pressure, latent_heat_vaporisation,
+                                                      stephan_boltzman_constant, ocean_emissivity)
+
+    u = FluxBoundaryCondition((controler == :u) ? updating_boundary : boundary; parameters = Val(:u), discrete_form=true)
+    v = FluxBoundaryCondition((controler == :v) ? updating_boundary : boundary; parameters = Val(:v), discrete_form=true)
+    T = FluxBoundaryCondition((controler == :T) ? updating_boundary : boundary; parameters = Val(:T), discrete_form=true)
     # TODO: add evaporation and proper calculations for other scalars like CO₂
 
     return (; u, v, T)
 end
-
-@inline (boundary::OceanAtmosphereBoundary)(i, j, grid, clock, model_fields, parameters) = 
-    boundary(i, j, grid, clock, model_fields, parameters.tracer)
 
 @inline function (boundary::OceanAtmosphereBoundary)(i, j, grid, clock, model_fields, ::Val{:u})
     ρₐ = boundary.air_reference_density
@@ -149,13 +174,11 @@ end
 ##### update coefficients
 #####
 
-function update_boundary_condition!(bc::BoundaryCondition{<:Any, <:DiscreteBoundaryFunction{<:Any, <:OceanAtmosphereBoundary}}, ::Val{:top}, field, model)
-    if bc.condition.parameters.controler
-        interface = bc.condition.func.interface_coefficients
-        atmosphere = bc.condition.func.atmosphere_state
+function update_boundary_condition!(bc::BoundaryCondition{<:Any, <:DiscreteBoundaryFunction{<:Any, <:OceanAtmosphereBoundary{true}}}, ::Val{:top}, field, model)
+    interface = bc.condition.func.interface_coefficients
+    atmosphere = bc.condition.func.atmosphere_state
 
-        update_interface!(interface, model, atmosphere)
-    end
-
+    update_interface!(interface, model, atmosphere)
+    
     return nothing
 end
