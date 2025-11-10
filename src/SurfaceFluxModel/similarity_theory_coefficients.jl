@@ -67,7 +67,7 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
 
     L = -u′^3 * θᵥ / (g * κ * Cₕ * U * (Tᵥ - θᵥ))
 
-    L = ifelse(isinf(Cₕ), Inf, 0)
+    #L = ifelse(isinf(Cₕ), Inf, 0)
 
     zₒ, zₒₜ = p.roughness_length(abs(u′))
 
