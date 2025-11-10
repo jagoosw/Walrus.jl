@@ -10,5 +10,6 @@ import Oceananigans.BoundaryConditions: update_boundary_condition!
 include("similarity_theory_coefficients.jl")
 include("prescribed_atmospheric_state.jl")
 include("boundary.jl")
+include("precomputed_coefficients.jl")
 
-end # module
+end # moduleg
