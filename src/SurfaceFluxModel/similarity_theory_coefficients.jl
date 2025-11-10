@@ -1,6 +1,5 @@
-using Oceananigans: fields
+using Oceananigans: fields, defaults
 using Oceananigans.Architectures: architecture
-using Oceananigans.BuoyancyFormulations: g_Earth
 using Oceananigans.Fields: Field, Center, set!
 using Oceananigans.Utils: launch!
 using KernelAbstractions: @kernel, @index
@@ -25,7 +24,7 @@ end
 """
 function SimilarityTheoryInterface(grid; 
                                    von_karman_constant::FT = 0.4,
-                                   gravity_acceleration::FT = g_Earth,
+                                   gravity_acceleration::FT = defaults.gravitational_acceleration,
                                    reference_height::FT = 10.0,
                                    virtual_temperature = VirtualTemperature(),
                                    virtual_potential_temperature = VirtualPotentialTemperature(),
@@ -67,7 +66,7 @@ adapt_structure(to, dc::SimilarityTheoryInterface) =
 
     L = -u′^3 * θᵥ / (g * κ * Cₕ * U * (Tᵥ - θᵥ))
 
-    #L = ifelse(isinf(Cₕ), Inf, 0)
+    L = ifelse(isinf(Cₕ), Inf, L)
 
     zₒ, zₒₜ = p.roughness_length(abs(u′))
 
@@ -198,7 +197,7 @@ end
         charnock_coefficient :: FT = 0.014
      air_kinematic_viscosity :: FT = 14.88e-6
     gravity_wave_coefficient :: FT = 0.11
-        gravity_acceleration :: FT = g_Earth
+        gravity_acceleration :: FT = defaults.gravitational_acceleration
 end
 
 @inline function (z::SmoothAndCharnock)(u′)
