@@ -37,7 +37,6 @@ export WindDrivenStokesDrift, WindDrivenStokesDriftSetup
 using Roots, Adapt
 
 using Oceananigans.Architectures: on_architecture, CPU, architecture
-using Oceananigans.BuoyancyFormulations: g_Earth
 using Oceananigans.StokesDrifts: UniformStokesDrift
 
 using Walrus: get_value
@@ -55,9 +54,9 @@ struct WindDrivenStokesDrift{DI, WI, DE, WN, G, TW}
    time_interpolation_window :: TW
 end
 
-function WindDrivenStokesDrift(; wind, depth,
+function WindDrivenStokesDrift(; boundary, depth,
                                  direction = 0,
-                                 gravitational_acceleration = g_Earth,
+                                 gravitational_acceleration = Oceananigans.defaults.gravitational_acceleration,
                                  time_interpolation_window = 240,
                                  precomputed_wavenumbers = false,
                                  precomputed_peak_frequencies = [0.3:0.001:1000;],
@@ -75,7 +74,7 @@ function WindDrivenStokesDrift(; wind, depth,
         precomputed_wavenumbers = SimpleInterpolation(precomputed_peak_frequencies, precomputed_k; arch)
     end
 
-    return WindDrivenStokesDrift(direction, wind, depth, precomputed_wavenumbers, gravitational_acceleration, time_interpolation_window)
+    return WindDrivenStokesDrift(direction, boundary, depth, precomputed_wavenumbers, gravitational_acceleration, time_interpolation_window)
 end
 
 adapt_structure(to, sd::WindDrivenStokesDrift) = 
@@ -158,7 +157,7 @@ end
 function WindDrivenStokesDriftSetup(; 
                                     wind, depth,
                                     direction = 0,
-                                    gravitational_acceleration = g_Earth,
+                                    gravitational_acceleration = Oceananigans.defaults.gravitational_acceleration,
                                     time_interpolation_window = 240,
                                     precomputed_wavenumbers = false,
                                     precomputed_peak_frequencies = [0.3:0.001:1000;],
