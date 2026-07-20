@@ -1,7 +1,7 @@
 name = "Walrus"
 uuid = "bec5164f-1c7a-4c32-8768-be9354254d6a"
 authors = ["Jago Stong-Wright <jagoosw@protonmail.com>"]
-version = "0.7.0"
+version = "0.8.0"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -14,8 +14,8 @@ Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 Adapt = "3.7, 4"
 CUDA = "5"
 KernelAbstractions = "0.9.22"
-OceanBioME = "0.14"
-Oceananigans = "0.95, 0.96, 0.97"
+OceanBioME = "0.14, 0.15, 0.16"
+Oceananigans = "0.95, 0.96, 0.97, 0.98, 0.99, 0.100, 0.101, 0.102, 0.103"
 Roots = "2"
 Test = "1.10"
 julia = "1.10"
